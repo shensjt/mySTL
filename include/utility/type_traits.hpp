@@ -367,7 +367,7 @@ namespace detail {
     
     template<typename Base, typename Derived>
     auto is_base_of_helper(...) -> true_type;
-}
+} // namespace detail 
 
 template<typename Base, typename Derived>
 struct is_base_of : 
@@ -390,7 +390,7 @@ namespace detail {
     
     template<typename From, typename To>
     auto is_convertible_test(...) -> false_type;
-}
+} // namespace detail
 
 template<typename From, typename To>
 struct is_convertible : decltype(detail::is_convertible_test<From, To>(0)) {};

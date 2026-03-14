@@ -1,7 +1,7 @@
 #pragma once
-#include <iostream>
 
-namespace util{
+namespace mystl {
+
 class NonCopyableMovable {
 protected:
     NonCopyableMovable() = default;
@@ -14,8 +14,4 @@ protected:
     NonCopyableMovable& operator=(NonCopyableMovable&&) = default;
 };
 
-
-
-
-
-} // namespace util
+} // namespace mystl
