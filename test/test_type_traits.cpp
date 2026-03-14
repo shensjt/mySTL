@@ -201,6 +201,77 @@ int main() {
         TEST((mystl::is_same_v<T, int&>));
     }
     
+    // ==================== 7. New Type Traits Tests ====================
+    std::cout << "\n7. Testing New Type Traits:" << std::endl;
+    
+    // is_integral
+    TEST((mystl::is_integral_v<int> == true));
+    TEST((mystl::is_integral_v<const int> == true));
+    TEST((mystl::is_integral_v<unsigned long long> == true));
+    TEST((mystl::is_integral_v<bool> == true));
+    TEST((mystl::is_integral_v<char> == true));
+    TEST((mystl::is_integral_v<float> == false));
+    TEST((mystl::is_integral_v<double> == false));
+    TEST((mystl::is_integral_v<int*> == false));
+    
+    // is_floating_point
+    TEST((mystl::is_floating_point_v<float> == true));
+    TEST((mystl::is_floating_point_v<double> == true));
+    TEST((mystl::is_floating_point_v<long double> == true));
+    TEST((mystl::is_floating_point_v<const double> == true));
+    TEST((mystl::is_floating_point_v<int> == false));
+    TEST((mystl::is_floating_point_v<void> == false));
+    
+    // is_arithmetic
+    TEST((mystl::is_arithmetic_v<int> == true));
+    TEST((mystl::is_arithmetic_v<float> == true));
+    TEST((mystl::is_arithmetic_v<const double> == true));
+    TEST((mystl::is_arithmetic_v<void> == false));
+    TEST((mystl::is_arithmetic_v<int*> == false));
+    TEST((mystl::is_arithmetic_v<Base> == false));
+    
+    // is_signed / is_unsigned
+    TEST((mystl::is_signed_v<int> == true));
+    TEST((mystl::is_signed_v<float> == true));
+    TEST((mystl::is_signed_v<unsigned int> == false));
+    TEST((mystl::is_unsigned_v<unsigned int> == true));
+    TEST((mystl::is_unsigned_v<int> == false));
+    TEST((mystl::is_unsigned_v<float> == false));
+    
+    // is_array
+    TEST((mystl::is_array_v<int[]> == true));
+    TEST((mystl::is_array_v<int[5]> == true));
+    TEST((mystl::is_array_v<int> == false));
+    TEST((mystl::is_array_v<int*> == false));
+    
+    // remove_extent
+    TEST((mystl::is_same_v<mystl::remove_extent_t<int[]>, int>));
+    TEST((mystl::is_same_v<mystl::remove_extent_t<int[5]>, int>));
+    TEST((mystl::is_same_v<mystl::remove_extent_t<int>, int>));
+    
+    // is_function (simplified test)
+    TEST((mystl::is_function_v<void()> == true));
+    TEST((mystl::is_function_v<int(double, char)> == true));
+    TEST((mystl::is_function_v<int> == false));
+    TEST((mystl::is_function_v<int*> == false));
+    
+    // decay
+    TEST((mystl::is_same_v<mystl::decay_t<int[]>, int*>));
+    TEST((mystl::is_same_v<mystl::decay_t<int[5]>, int*>));
+    TEST((mystl::is_same_v<mystl::decay_t<int&>, int>));
+    TEST((mystl::is_same_v<mystl::decay_t<const int&>, int>));
+    TEST((mystl::is_same_v<mystl::decay_t<void()>, void(*)()>));
+    
+    // enable_if
+    {
+        using T1 = mystl::enable_if_t<true, int>;
+        TEST((mystl::is_same_v<T1, int>));
+        
+        // enable_if<false> should have no ::type
+        static_assert(mystl::is_same_v<mystl::enable_if<false>, mystl::enable_if<false>>, 
+                     "enable_if<false> should exist but have no ::type");
+    }
+    
     std::cout << "\n=== All tests passed! ===" << std::endl;
     return 0;
 }
