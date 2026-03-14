@@ -580,7 +580,7 @@ namespace detail {
     auto is_base_of_helper(int) -> decltype(test_base_of<Base>(static_cast<Derived*>(nullptr)));
     
     template<typename Base, typename Derived>
-    auto is_base_of_helper(...) -> true_type;
+    auto is_base_of_helper(...) -> false_type;
 } // namespace detail 
 
 template<typename Base, typename Derived>
@@ -590,6 +590,12 @@ struct is_base_of :
         is_class_v<Base> && is_class_v<Derived> &&
         decltype(detail::is_base_of_helper<Base, Derived>(0))::value
     > {};
+
+template<typename T>
+struct is_base_of<T, T> : integral_constant<bool, is_class_v<T>> {};
+
+template<typename Base, typename Derived>
+inline constexpr bool is_base_of_v = is_base_of<Base, Derived>::value;
 
 // 9.2 is_convertible - check if types are convertible
 namespace detail {
@@ -608,6 +614,32 @@ namespace detail {
 
 template<typename From, typename To>
 struct is_convertible : decltype(detail::is_convertible_test<From, To>(0)) {};
+
+// Specialization for void conversions
+template<typename From>
+struct is_convertible<From, void> : true_type {};
+
+template<>
+struct is_convertible<void, void> : true_type {};
+
+template<typename To>
+struct is_convertible<void, To> : false_type {};
+
+// Specialization for void* to pointer conversions
+template<typename To>
+struct is_convertible<void*, To*> : true_type {};
+
+template<typename To>
+struct is_convertible<const void*, To*> : true_type {};
+
+template<typename To>
+struct is_convertible<volatile void*, To*> : true_type {};
+
+template<typename To>
+struct is_convertible<const volatile void*, To*> : true_type {};
+
+template<typename From, typename To>
+inline constexpr bool is_convertible_v = is_convertible<From, To>::value;
 
 
 // ==================== 10. Helper Tools ====================
@@ -630,6 +662,407 @@ struct enable_if<true, T> {
 
 template<bool B, typename T = void>
 using enable_if_t = typename enable_if<B, T>::type;
+
+
+// ==================== 12. Construction and Assignment Traits ====================
+
+namespace detail {
+    // Helper for checking if a type can be constructed from arguments
+    template<typename T, typename... Args>
+    auto test_constructible(int) -> decltype(T(mystl::declval<Args>()...), true_type());
+    
+    template<typename T, typename... Args>
+    auto test_constructible(...) -> false_type;
+    
+    // Helper for checking if a type can be assigned
+    template<typename T, typename U>
+    auto test_assignable(int) -> decltype(mystl::declval<T>() = mystl::declval<U>(), true_type());
+    
+    template<typename T, typename U>
+    auto test_assignable(...) -> false_type;
+    
+    // Helper for checking if a type can be destroyed
+    template<typename T>
+    auto test_destructible(int) -> decltype(mystl::declval<T&>().~T(), true_type());
+    
+    template<typename T>
+    auto test_destructible(...) -> false_type;
+}
+
+// is_constructible - check if type can be constructed from arguments
+template<typename T, typename... Args>
+struct is_constructible : decltype(detail::test_constructible<T, Args...>(0)) {};
+
+template<typename T, typename... Args>
+inline constexpr bool is_constructible_v = is_constructible<T, Args...>::value;
+
+// is_default_constructible - check if type can be default constructed
+template<typename T>
+struct is_default_constructible : is_constructible<T> {};
+
+template<typename T>
+inline constexpr bool is_default_constructible_v = is_default_constructible<T>::value;
+
+// is_copy_constructible - check if type can be copy constructed
+template<typename T>
+struct is_copy_constructible : is_constructible<T, add_lvalue_reference_t<const T>> {};
+
+template<typename T>
+inline constexpr bool is_copy_constructible_v = is_copy_constructible<T>::value;
+
+// is_move_constructible - check if type can be move constructed
+template<typename T>
+struct is_move_constructible : is_constructible<T, add_rvalue_reference_t<T>> {};
+
+template<typename T>
+inline constexpr bool is_move_constructible_v = is_move_constructible<T>::value;
+
+// is_assignable - check if type can be assigned from another type
+template<typename T, typename U>
+struct is_assignable : decltype(detail::test_assignable<T, U>(0)) {};
+
+template<typename T, typename U>
+inline constexpr bool is_assignable_v = is_assignable<T, U>::value;
+
+// is_copy_assignable - check if type can be copy assigned
+template<typename T>
+struct is_copy_assignable : is_assignable<add_lvalue_reference_t<T>, add_lvalue_reference_t<const T>> {};
+
+template<typename T>
+inline constexpr bool is_copy_assignable_v = is_copy_assignable<T>::value;
+
+// is_move_assignable - check if type can be move assigned
+template<typename T>
+struct is_move_assignable : is_assignable<add_lvalue_reference_t<T>, add_rvalue_reference_t<T>> {};
+
+template<typename T>
+inline constexpr bool is_move_assignable_v = is_move_assignable<T>::value;
+
+// is_destructible - check if type can be destroyed
+template<typename T>
+struct is_destructible : decltype(detail::test_destructible<T>(0)) {};
+
+template<typename T>
+inline constexpr bool is_destructible_v = is_destructible<T>::value;
+
+// Specialization for void (void cannot be constructed, assigned, or destroyed)
+template<typename... Args>
+struct is_constructible<void, Args...> : false_type {};
+
+template<>
+struct is_default_constructible<void> : false_type {};
+
+template<>
+struct is_copy_constructible<void> : false_type {};
+
+template<>
+struct is_move_constructible<void> : false_type {};
+
+template<typename U>
+struct is_assignable<void, U> : false_type {};
+
+template<>
+struct is_copy_assignable<void> : false_type {};
+
+template<>
+struct is_move_assignable<void> : false_type {};
+
+template<>
+struct is_destructible<void> : false_type {};
+
+
+// ==================== 13. Type Properties ====================
+
+// Compiler intrinsic support detection
+#ifdef __GNUC__
+    #define MYSTL_HAS_BUILTIN_TRIVIAL 1
+    #define MYSTL_HAS_BUILTIN_STANDARD_LAYOUT 1
+    #define MYSTL_HAS_BUILTIN_POLYMORPHIC 1
+    #define MYSTL_HAS_BUILTIN_ENUM 1
+    #define MYSTL_HAS_BUILTIN_FINAL 1
+#elif defined(_MSC_VER)
+    #define MYSTL_HAS_BUILTIN_TRIVIAL 1
+    #define MYSTL_HAS_BUILTIN_STANDARD_LAYOUT 1
+    #define MYSTL_HAS_BUILTIN_POLYMORPHIC 1
+    #define MYSTL_HAS_BUILTIN_ENUM 1
+    #define MYSTL_HAS_BUILTIN_FINAL 1
+#else
+    #define MYSTL_HAS_BUILTIN_TRIVIAL 0
+    #define MYSTL_HAS_BUILTIN_STANDARD_LAYOUT 0
+    #define MYSTL_HAS_BUILTIN_POLYMORPHIC 0
+    #define MYSTL_HAS_BUILTIN_ENUM 0
+    #define MYSTL_HAS_BUILTIN_FINAL 0
+#endif
+
+// is_trivial - use compiler intrinsic when available
+#ifdef __GNUC__
+template<typename T>
+struct is_trivial : integral_constant<bool, __is_trivial(T)> {};
+#elif defined(_MSC_VER)
+template<typename T>
+struct is_trivial : integral_constant<bool, __is_trivial(T)> {};
+#else
+template<typename T>
+struct is_trivial : false_type {};
+#endif
+
+template<typename T>
+inline constexpr bool is_trivial_v = is_trivial<T>::value;
+
+// is_trivially_copyable - use compiler intrinsic when available
+#ifdef __GNUC__
+template<typename T>
+struct is_trivially_copyable : integral_constant<bool, __is_trivially_copyable(T)> {};
+#elif defined(_MSC_VER)
+template<typename T>
+struct is_trivially_copyable : integral_constant<bool, __is_trivially_copyable(T)> {};
+#else
+template<typename T>
+struct is_trivially_copyable : false_type {};
+#endif
+
+template<typename T>
+inline constexpr bool is_trivially_copyable_v = is_trivially_copyable<T>::value;
+
+// is_trivially_default_constructible - placeholder implementation
+template<typename T>
+struct is_trivially_default_constructible : false_type {};
+
+template<typename T>
+inline constexpr bool is_trivially_default_constructible_v = is_trivially_default_constructible<T>::value;
+
+// is_standard_layout - use compiler intrinsic when available
+#ifdef __GNUC__
+template<typename T>
+struct is_standard_layout : integral_constant<bool, __is_standard_layout(T)> {};
+#elif defined(_MSC_VER)
+template<typename T>
+struct is_standard_layout : integral_constant<bool, __is_standard_layout(T)> {};
+#else
+template<typename T>
+struct is_standard_layout : false_type {};
+#endif
+
+template<typename T>
+inline constexpr bool is_standard_layout_v = is_standard_layout<T>::value;
+
+// is_polymorphic - check if type has virtual functions
+namespace detail {
+    template<typename T, bool = is_class_v<T>>
+    struct polymorphic_test_impl {
+        template<typename U>
+        static auto test(int) -> decltype(dynamic_cast<const volatile void*>(static_cast<U*>(nullptr)), true_type());
+        
+        template<typename U>
+        static auto test(...) -> false_type;
+        
+        using type = decltype(test<T>(0));
+    };
+    
+    template<typename T>
+    struct polymorphic_test_impl<T, false> {
+        using type = false_type;
+    };
+}
+
+template<typename T>
+struct is_polymorphic : integral_constant<bool,
+    is_class_v<T> && detail::polymorphic_test_impl<T>::type::value> {};
+
+template<typename T>
+inline constexpr bool is_polymorphic_v = is_polymorphic<T>::value;
+
+// is_abstract - check if type is abstract (has pure virtual functions)
+// Standard library typically uses compiler intrinsics like __is_abstract(T)
+// For portable implementation, we use a SFINAE trick
+namespace detail {
+    template<typename T, bool = is_class_v<T>>
+    struct abstract_test_impl {
+        template<typename U>
+        static auto test(int) -> decltype(new U, false_type());
+        
+        template<typename U>
+        static auto test(...) -> true_type;
+        
+        using type = decltype(test<T>(0));
+    };
+    
+    template<typename T>
+    struct abstract_test_impl<T, false> {
+        using type = false_type;
+    };
+}
+
+template<typename T>
+struct is_abstract : integral_constant<bool,
+    is_class_v<T> && detail::abstract_test_impl<T>::type::value> {};
+
+template<typename T>
+inline constexpr bool is_abstract_v = is_abstract<T>::value;
+
+// is_final - use compiler intrinsic when available
+#ifdef __GNUC__
+template<typename T>
+struct is_final : integral_constant<bool, __is_final(T)> {};
+#elif defined(_MSC_VER)
+template<typename T>
+struct is_final : integral_constant<bool, __is_final(T)> {};
+#else
+template<typename T>
+struct is_final : false_type {};
+#endif
+
+template<typename T>
+inline constexpr bool is_final_v = is_final<T>::value;
+
+// is_empty - check if type is an empty class
+namespace detail {
+    // Helper to check if a class is empty using inheritance technique
+    template<typename T>
+    struct empty_helper : T {
+        char dummy;
+    };
+    
+    template<typename T, bool = is_class_v<T> && !is_final_v<T> && !is_polymorphic_v<T>>
+    struct empty_test_impl : false_type {};
+    
+    template<typename T>
+    struct empty_test_impl<T, true> : integral_constant<bool, 
+        sizeof(empty_helper<T>) == sizeof(char)> {};
+    
+    template<typename T>
+    struct empty_test_impl<T, false> : false_type {};
+}
+
+template<typename T>
+struct is_empty : integral_constant<bool, 
+    is_class_v<T> && detail::empty_test_impl<T>::value> {};
+
+template<typename T>
+inline constexpr bool is_empty_v = is_empty<T>::value;
+
+
+// ==================== 14. Additional Type Transformations ====================
+
+// is_enum - use compiler intrinsic when available
+#ifdef __GNUC__
+template<typename T>
+struct is_enum : integral_constant<bool, __is_enum(T)> {};
+#elif defined(_MSC_VER)
+template<typename T>
+struct is_enum : integral_constant<bool, __is_enum(T)> {};
+#else
+template<typename T>
+struct is_enum : false_type {};
+#endif
+
+template<typename T>
+inline constexpr bool is_enum_v = is_enum<T>::value;
+
+// make_signed - convert to signed type
+template<typename T>
+struct make_signed {
+    static_assert(is_integral_v<T> || is_enum_v<T>, "make_signed requires integral or enum type");
+    using type = T; // Simplified implementation
+};
+
+// Specializations for standard integral types
+template<> struct make_signed<bool> { using type = bool; };
+template<> struct make_signed<char> { using type = signed char; };
+template<> struct make_signed<signed char> { using type = signed char; };
+template<> struct make_signed<unsigned char> { using type = signed char; };
+template<> struct make_signed<short> { using type = short; };
+template<> struct make_signed<unsigned short> { using type = short; };
+template<> struct make_signed<int> { using type = int; };
+template<> struct make_signed<unsigned int> { using type = int; };
+template<> struct make_signed<long> { using type = long; };
+template<> struct make_signed<unsigned long> { using type = long; };
+template<> struct make_signed<long long> { using type = long long; };
+template<> struct make_signed<unsigned long long> { using type = long long; };
+
+// Handle const/volatile qualifiers
+template<typename T> struct make_signed<const T> { using type = const typename make_signed<T>::type; };
+template<typename T> struct make_signed<volatile T> { using type = volatile typename make_signed<T>::type; };
+template<typename T> struct make_signed<const volatile T> { using type = const volatile typename make_signed<T>::type; };
+
+template<typename T>
+using make_signed_t = typename make_signed<T>::type;
+
+// make_unsigned - convert to unsigned type
+template<typename T>
+struct make_unsigned {
+    static_assert(is_integral_v<T> || is_enum_v<T>, "make_unsigned requires integral or enum type");
+    using type = T; // Simplified implementation
+};
+
+// Specializations for standard integral types
+template<> struct make_unsigned<bool> { using type = bool; };
+template<> struct make_unsigned<char> { using type = unsigned char; };
+template<> struct make_unsigned<signed char> { using type = unsigned char; };
+template<> struct make_unsigned<unsigned char> { using type = unsigned char; };
+template<> struct make_unsigned<short> { using type = unsigned short; };
+template<> struct make_unsigned<unsigned short> { using type = unsigned short; };
+template<> struct make_unsigned<int> { using type = unsigned int; };
+template<> struct make_unsigned<unsigned int> { using type = unsigned int; };
+template<> struct make_unsigned<long> { using type = unsigned long; };
+template<> struct make_unsigned<unsigned long> { using type = unsigned long; };
+template<> struct make_unsigned<long long> { using type = unsigned long long; };
+template<> struct make_unsigned<unsigned long long> { using type = unsigned long long; };
+
+// Handle const/volatile qualifiers
+template<typename T> struct make_unsigned<const T> { using type = const typename make_unsigned<T>::type; };
+template<typename T> struct make_unsigned<volatile T> { using type = volatile typename make_unsigned<T>::type; };
+template<typename T> struct make_unsigned<const volatile T> { using type = const volatile typename make_unsigned<T>::type; };
+
+template<typename T>
+using make_unsigned_t = typename make_unsigned<T>::type;
+
+// common_type - find common type for a set of types
+template<typename...>
+struct common_type {};
+
+template<typename T>
+struct common_type<T> {
+    using type = decay_t<T>;
+};
+
+template<typename T, typename U>
+struct common_type<T, U> {
+private:
+    using decayed_T = decay_t<T>;
+    using decayed_U = decay_t<U>;
+    using cond_type = decltype(true ? mystl::declval<decayed_T>() : mystl::declval<decayed_U>());
+public:
+    using type = decay_t<cond_type>;
+};
+
+template<typename T, typename U, typename... V>
+struct common_type<T, U, V...> {
+    using type = typename common_type<typename common_type<T, U>::type, V...>::type;
+};
+
+template<typename... T>
+using common_type_t = typename common_type<T...>::type;
+
+// underlying_type - get underlying type of enum
+template<typename T>
+struct underlying_type {
+    static_assert(is_enum_v<T>, "underlying_type requires enum type");
+    
+    // Use compiler intrinsic when available
+    #ifdef __GNUC__
+        using type = __underlying_type(T);
+    #elif defined(_MSC_VER)
+        using type = __underlying_type(T);
+    #else
+        // Fallback: try to deduce from enum values (simplified)
+        // This is not fully correct but provides a placeholder
+        using type = int;
+    #endif
+};
+
+template<typename T>
+using underlying_type_t = typename underlying_type<T>::type;
 
 
 } // namespace mystl
