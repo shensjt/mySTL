@@ -1,3 +1,20 @@
+/**
+ * @file test_type_traits.cpp
+ * @brief Comprehensive test suite for mystl::type_traits implementation
+ * 
+ * This file contains extensive tests for the type traits library in mystl.
+ * It verifies the correctness of compile-time type introspection, classification,
+ * and transformation traits against expected behavior.
+ * 
+ * The tests are organized into logical sections corresponding to different
+ * categories of type traits, making it easy to locate and understand specific tests.
+ * 
+ * @author shensjt
+ * @date 2026-03-16
+ * 
+ * @see include/utility/type_traits.hpp
+ */
+
 #include "../include/utility/type_traits.hpp"
 #include <iostream>
 #include <cassert>
@@ -13,12 +30,28 @@
         } \
     } while(0)
 
-// Test classes for inheritance testing
+// ==================== Test Classes for Inheritance Testing ====================
+
+/**
+ * @brief Base class for inheritance testing
+ */
 class Base {};
+
+/**
+ * @brief Derived class for inheritance testing
+ */
 class Derived : public Base {};
+
+/**
+ * @brief Unrelated class for inheritance testing
+ */
 class AnotherClass {};
 
-// Test classes for construction/assignment testing
+// ==================== Test Classes for Construction/Assignment Testing ====================
+
+/**
+ * @brief Fully constructible and assignable class
+ */
 class Constructible {
 public:
     Constructible() = default;
@@ -29,6 +62,9 @@ public:
     ~Constructible() = default;
 };
 
+/**
+ * @brief Non-copyable but movable class
+ */
 class NonCopyable {
 public:
     NonCopyable() = default;
@@ -39,6 +75,9 @@ public:
     ~NonCopyable() = default;
 };
 
+/**
+ * @brief Class without default constructor
+ */
 class NonDefaultConstructible {
 public:
     NonDefaultConstructible(int) {}
@@ -46,26 +85,130 @@ public:
     ~NonDefaultConstructible() = default;
 };
 
-// Test classes for type properties
+// ==================== Test Classes for Type Properties ====================
+
+/**
+ * @brief Abstract base class with virtual functions
+ */
 class PolymorphicBase {
 public:
     virtual ~PolymorphicBase() = default;
     virtual void foo() = 0;
 };
 
+/**
+ * @brief Concrete derived class implementing virtual functions
+ */
 class PolymorphicDerived : public PolymorphicBase {
 public:
     void foo() override {}
 };
 
+/**
+ * @brief Empty class (no members)
+ */
 class EmptyClass {};
 
-// Test structs for is_empty testing
+// ==================== Test Structs for is_empty Testing ====================
+
+/**
+ * @brief Non-empty struct with data member
+ */
 struct NonEmptyStruct { int x; };
+
+/**
+ * @brief Empty struct (no members)
+ */
 struct EmptyStruct {};
+
+/**
+ * @brief Struct with virtual destructor (not empty due to vtable)
+ */
 struct EmptyWithVirtual { virtual ~EmptyWithVirtual() = default; };
+
+/**
+ * @brief Final empty class
+ */
 struct EmptyFinal final {};
 
+// ==================== Additional Test Classes for New Traits ====================
+
+/**
+ * @brief Trivial class (POD type)
+ */
+struct TrivialStruct {
+    int x;
+    double y;
+};
+
+/**
+ * @brief Non-trivial class (has user-defined constructor)
+ */
+struct NonTrivialStruct {
+    NonTrivialStruct() : x(0) {}
+    int x;
+};
+
+/**
+ * @brief Standard layout struct (all members have same access control)
+ */
+struct StandardLayoutStruct {
+    int x;
+    double y;
+};
+
+/**
+ * @brief Non-standard layout struct (has virtual function)
+ */
+struct NonStandardLayoutStruct {
+    virtual ~NonStandardLayoutStruct() = default;
+    int x;
+};
+
+/**
+ * @brief Non-standard layout struct (mixed access control)
+ */
+struct NonStandardLayoutMixedAccess {
+    int x;
+private:
+    int y;  // Different access control breaks standard layout
+};
+
+/**
+ * @brief Final class for is_final testing
+ */
+class FinalClass final {};
+
+/**
+ * @brief Non-final class for is_final testing
+ */
+class NonFinalClass {};
+
+/**
+ * @brief Enum for testing is_enum and underlying_type
+ */
+enum TestEnum { VALUE1, VALUE2, VALUE3 };
+
+/**
+ * @brief Scoped enum for testing
+ */
+enum class ScopedEnum { A, B, C };
+
+/**
+ * @brief Enum with specified underlying type
+ */
+enum class EnumWithType : unsigned long { X, Y, Z };
+
+// ==================== Test Functions ====================
+
+/**
+ * @brief Main test function for type_traits
+ * 
+ * @return int 0 if all tests pass, 1 if any test fails
+ * 
+ * @details This function organizes tests into logical sections and runs
+ * comprehensive verification of all type traits in the mystl library.
+ */
 int main() {
     std::cout << "=== Testing mystl type_traits ===\n" << std::endl;
     
@@ -215,6 +358,12 @@ int main() {
     TEST((mystl::is_same_v<mystl::remove_extent_t<int[]>, int>));
     TEST((mystl::is_same_v<mystl::remove_extent_t<int[5]>, int>));
     TEST((mystl::is_same_v<mystl::remove_extent_t<int>, int>));
+    
+    // remove_all_extents
+    TEST((mystl::is_same_v<mystl::remove_all_extents_t<int[3][4]>, int>));
+    TEST((mystl::is_same_v<mystl::remove_all_extents_t<int[2][3][4]>, int>));
+    TEST((mystl::is_same_v<mystl::remove_all_extents_t<int[]>, int>));
+    TEST((mystl::is_same_v<mystl::remove_all_extents_t<int>, int>));
     
     // is_function
     TEST((mystl::is_function_v<void()> == true));
@@ -420,8 +569,48 @@ int main() {
     TEST((mystl::is_same_v<mystl::make_unsigned_t<const int>, const unsigned int>));
     TEST((mystl::is_same_v<mystl::make_unsigned_t<volatile long>, volatile unsigned long>));
     
-    // ==================== 15. Fixed Bugs and Edge Cases ====================
-    std::cout << "\n15. Testing Fixed Bugs and Edge Cases:" << std::endl;
+    // ==================== 15. New Traits Testing ====================
+    std::cout << "\n15. Testing New Traits:" << std::endl;
+    
+    // is_trivial
+    TEST((mystl::is_trivial_v<TrivialStruct> == true));
+    TEST((mystl::is_trivial_v<NonTrivialStruct> == false));
+    TEST((mystl::is_trivial_v<int> == true));
+    
+    // is_trivially_copyable
+    TEST((mystl::is_trivially_copyable_v<TrivialStruct> == true));
+    TEST((mystl::is_trivially_copyable_v<int> == true));
+    
+    // is_standard_layout
+    TEST((mystl::is_standard_layout_v<StandardLayoutStruct> == true));
+    TEST((mystl::is_standard_layout_v<NonStandardLayoutStruct> == false));
+    TEST((mystl::is_standard_layout_v<int> == true));
+    
+    // is_final
+    TEST((mystl::is_final_v<FinalClass> == true));
+    TEST((mystl::is_final_v<NonFinalClass> == false));
+    TEST((mystl::is_final_v<int> == false));
+    
+    // is_enum
+    TEST((mystl::is_enum_v<TestEnum> == true));
+    TEST((mystl::is_enum_v<ScopedEnum> == true));
+    TEST((mystl::is_enum_v<EnumWithType> == true));
+    TEST((mystl::is_enum_v<int> == false));
+    TEST((mystl::is_enum_v<Base> == false));
+    
+    // underlying_type (compile-time check only)
+    {
+        using T1 = mystl::underlying_type_t<TestEnum>;
+        using T2 = mystl::underlying_type_t<ScopedEnum>;
+        using T3 = mystl::underlying_type_t<EnumWithType>;
+        // Just check that the types can be obtained (compile-time test)
+        static_assert(mystl::is_integral_v<T1>, "underlying_type should return integral type");
+        static_assert(mystl::is_integral_v<T2>, "underlying_type should return integral type");
+        static_assert(mystl::is_same_v<T3, unsigned long>, "underlying_type should match specified type");
+    }
+    
+    // ==================== 16. Fixed Bugs and Edge Cases ====================
+    std::cout << "\n16. Testing Fixed Bugs and Edge Cases:" << std::endl;
     
     // is_base_of fixed bugs
     TEST((mystl::is_base_of_v<Base, Derived> == true));
