@@ -13,8 +13,7 @@
  * 本头文件提供了一套全面的类型特性，用于编译时类型内省、类型分类和类型转换。
  * 它实现了C++标准库类型特性，并提供了模板元编程的额外工具。
  * 
- * @author mySTL Team
- * @version 1.0.0
+ * @author mySTL shensjt
  * @date 2026-03-16
  * 
  * @see https://en.cppreference.com/w/cpp/header/type_traits
