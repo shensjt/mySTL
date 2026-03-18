@@ -152,46 +152,61 @@ class MemoryPool {
 private:
     // ==================== 成员变量 ====================
     
-    FreeNode* free_lists_[PoolConfig::num_pools];  ///< 空闲链表数组
-    char* current_block_;                          ///< 当前正在使用的内存块
-    std::size_t remaining_;                        ///< 当前块剩余字节数
+    FreeNode* free_lists_[PoolConfig::num_pools];  ///< 空闲链表数组 / Array of free lists
+    char* current_block_;                          ///< 当前正在使用的内存块 / Currently used memory block
+    std::size_t remaining_;                        ///< 当前块剩余字节数 / Remaining bytes in current block
     
     // 跟踪所有分配的大块内存（模仿GCC的块管理）
+    // Track all allocated large blocks (mimicking GCC's block management)
     struct BlockHeader {
-        BlockHeader* next;
-        std::size_t size;
+        BlockHeader* next;  ///< 指向下一个块的指针 / Pointer to next block
+        std::size_t size;   ///< 块大小 / Block size
     };
-    BlockHeader* allocated_blocks_;                ///< 所有分配的大块内存链表
+    BlockHeader* allocated_blocks_;                ///< 所有分配的大块内存链表 / Linked list of all allocated large blocks
     
     // ==================== 私有方法 ====================
     
     /**
      * @brief 根据请求大小获取池索引（模仿GCC）
+     * @param n 请求的大小 / Requested size
+     * @return 池索引 / Pool index
      */
     std::size_t get_pool_index(std::size_t n) const noexcept;
     
     /**
      * @brief 从内存池分配内存（模仿GCC）
+     * @param n 请求的大小 / Requested size
+     * @return 分配的内存指针 / Allocated memory pointer
      */
     void* allocate_from_pool(std::size_t n);
     
     /**
      * @brief 分配新内存块（模仿GCC）
+     * @param size 块大小 / Block size
+     * @return 分配的内存指针 / Allocated memory pointer
      */
     void* allocate_new_block(std::size_t size);
     
     /**
      * @brief 分配对齐的内存（模仿GCC对齐处理）
+     * @param size 请求的大小 / Requested size
+     * @return 对齐的内存指针 / Aligned memory pointer
+     * @throw std::bad_alloc 如果分配失败 / If allocation fails
      */
     void* allocate_aligned(std::size_t size);
     
     /**
      * @brief 释放对齐的内存
+     * @param p 要释放的内存指针 / Memory pointer to deallocate
+     * @param size 内存大小 / Memory size
      */
     void deallocate_aligned(void* p, std::size_t size) noexcept;
     
     /**
      * @brief 将内存块添加到空闲链表（模仿GCC）
+     * @param block 内存块指针 / Memory block pointer
+     * @param size 内存块大小 / Memory block size
+     * @param index 池索引 / Pool index
      */
     void add_block_to_free_list(void* block, std::size_t size, std::size_t index);
     
@@ -209,11 +224,16 @@ public:
     
     /**
      * @brief 分配内存（模仿GCC接口）
+     * @param n 请求的大小 / Requested size
+     * @return 分配的内存指针 / Allocated memory pointer
+     * @throw std::bad_alloc 如果分配失败 / If allocation fails
      */
     void* allocate(std::size_t n);
     
     /**
      * @brief 释放内存（模仿GCC接口）
+     * @param p 要释放的内存指针 / Memory pointer to deallocate
+     * @param n 内存大小 / Memory size
      */
     void deallocate(void* p, std::size_t n) noexcept;
     
@@ -412,9 +432,13 @@ inline void MemoryPool::add_block_to_free_list(void* block, std::size_t size, st
  * @brief 获取线程局部内存池实例
  * 
  * 模仿GCC实现，每个线程有自己的内存池实例。
+ * Mimics GCC implementation, each thread has its own memory pool instance.
+ * 
+ * @return 线程局部内存池引用 / Thread-local memory pool reference
  */
 inline MemoryPool& get_thread_pool() {
     // 每个线程有自己的内存池实例
+    // Each thread has its own memory pool instance
     static thread_local MemoryPool thread_pool;
     return thread_pool;
 }

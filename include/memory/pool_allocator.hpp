@@ -66,12 +66,20 @@ namespace mystl {
  * 基于内存池的分配器实现，优化小对象分配性能。
  * 遵循C++11标准分配器接口，提供与标准分配器完全相同的API。
  * 
- * @tparam T 分配的元素类型
+ * Memory pool-based allocator implementation, optimizing small object allocation performance.
+ * Follows C++11 standard allocator interface, providing exactly the same API as standard allocator.
+ * 
+ * @tparam T 分配的元素类型 / Element type to allocate
  * 
  * 注意：与标准分配器的主要区别：
  * 1. is_always_equal = false_type（有状态分配器）
  * 2. propagate_on_container_copy_assignment = false_type（不传播拷贝赋值）
  * 3. 使用内存池优化小对象分配
+ * 
+ * Note: Main differences from standard allocator:
+ * 1. is_always_equal = false_type (stateful allocator)
+ * 2. propagate_on_container_copy_assignment = false_type (does not propagate on copy assignment)
+ * 3. Uses memory pool to optimize small object allocation
  */
 template<typename T>
 class pool_allocator {
@@ -80,17 +88,17 @@ private:
     
 public:
     // ==================== 类型定义 (C++11要求) ====================
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
+    using value_type = T;          ///< 分配的元素类型 / Element type to allocate
+    using pointer = T*;            ///< 元素指针类型 / Pointer to element type
+    using const_pointer = const T*; ///< 常量元素指针类型 / Const pointer to element type
+    using reference = T&;          ///< 元素引用类型 / Reference to element type
+    using const_reference = const T&; ///< 常量元素引用类型 / Const reference to element type
+    using size_type = std::size_t; ///< 大小类型，用于表示元素数量 / Size type for representing number of elements
+    using difference_type = std::ptrdiff_t; ///< 指针差异类型 / Pointer difference type
     
     // ==================== C++11新增类型定义 ====================
-    using void_pointer = void*;
-    using const_void_pointer = const void*;
+    using void_pointer = void*;    ///< void指针类型 / Void pointer type
+    using const_void_pointer = const void*; ///< 常量void指针类型 / Const void pointer type
     
     // ==================== 传播特性 ====================
     /**
@@ -163,7 +171,10 @@ public:
      * 允许从pool_allocator<U>构造pool_allocator<T>，用于重新绑定场景。
      * 所有pool_allocator实例共享同一个全局内存池。
      * 
-     * @tparam U 源分配器的元素类型
+     * Allows constructing pool_allocator<T> from pool_allocator<U>, used in rebinding scenarios.
+     * All pool_allocator instances share the same global memory pool.
+     * 
+     * @tparam U 源分配器的元素类型 / Element type of source allocator
      */
     template<typename U>
     pool_allocator(const pool_allocator<U>&) noexcept {}
@@ -213,14 +224,22 @@ public:
     
     /**
      * @brief 构造对象
-     * @param p 要构造对象的内存位置
-     * @param args 构造参数
+     * @param p 要构造对象的内存位置 / Memory location to construct object at
+     * @param args 构造参数 / Construction arguments
      * 
      * 委托给基类allocator的construct函数。
      * 注意：C++17中此函数被弃用，建议使用allocator_traits::construct。
      * C++20中此成员函数被移除。
      * 
+     * Delegates to base class allocator's construct function.
+     * Note: This function is deprecated in C++17, use allocator_traits::construct instead.
+     * This member function is removed in C++20.
+     * 
      * 与官方实现对齐：使用完美转发保持参数的值类别。
+     * Aligned with official implementation: uses perfect forwarding to preserve value category of arguments.
+     * 
+     * @tparam U 要构造的对象类型（可以是T或其他类型） / Type of object to construct (can be T or other type)
+     * @tparam Args 参数包类型 / Parameter pack type
      */
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args) {
@@ -229,11 +248,17 @@ public:
     
     /**
      * @brief 销毁对象
-     * @param p 要销毁对象的指针
+     * @param p 要销毁对象的指针 / Pointer to object to destroy
      * 
      * 委托给基类allocator的destroy函数。
      * 注意：C++17中此函数被弃用，建议使用allocator_traits::destroy。
      * C++20中此成员函数被移除。
+     * 
+     * Delegates to base class allocator's destroy function.
+     * Note: This function is deprecated in C++17, use allocator_traits::destroy instead.
+     * This member function is removed in C++20.
+     * 
+     * @tparam U 要销毁的对象类型（可以是T或其他类型） / Type of object to destroy (can be T or other type)
      */
     template<typename U>
     void destroy(U* p) {

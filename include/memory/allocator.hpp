@@ -48,30 +48,35 @@ namespace mystl {
  * 这是mySTL的默认分配器实现，遵循C++11标准要求。
  * 注意：C++17中construct/destroy被弃用，C++20中移除了这些成员函数。
  * 但在本学习项目中，我们保留这些函数以便理解分配器的完整工作原理。
+ * 
+ * @tparam T 分配的元素类型
+ *        Element type to allocate
  */
 template<typename T>
 class allocator {
 public:
     // ==================== 类型定义 (C++11要求) ====================
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::size_t;
-    using difference_type = std::ptrdiff_t;
+    using value_type = T;          ///< 分配的元素类型 / Element type to allocate
+    using pointer = T*;            ///< 元素指针类型 / Pointer to element type
+    using const_pointer = const T*; ///< 常量元素指针类型 / Const pointer to element type
+    using reference = T&;          ///< 元素引用类型 / Reference to element type
+    using const_reference = const T&; ///< 常量元素引用类型 / Const reference to element type
+    using size_type = std::size_t; ///< 大小类型，用于表示元素数量 / Size type for representing number of elements
+    using difference_type = std::ptrdiff_t; ///< 指针差异类型 / Pointer difference type
     
     // ==================== C++11新增类型定义 ====================
-    using void_pointer = void*;
-    using const_void_pointer = const void*;
+    using void_pointer = void*;    ///< void指针类型 / Void pointer type
+    using const_void_pointer = const void*; ///< 常量void指针类型 / Const void pointer type
     
     // 传播特性：控制分配器在容器操作中的行为
-    using propagate_on_container_move_assignment = mystl::true_type;
-    using propagate_on_container_copy_assignment = mystl::false_type;
-    using propagate_on_container_swap = mystl::false_type;
+    // Propagation traits: control allocator behavior in container operations
+    using propagate_on_container_move_assignment = mystl::true_type;  ///< 容器移动赋值时传播分配器 / Propagate allocator on container move assignment
+    using propagate_on_container_copy_assignment = mystl::false_type; ///< 容器拷贝赋值时不传播分配器 / Do not propagate allocator on container copy assignment
+    using propagate_on_container_swap = mystl::false_type;            ///< 容器交换时不传播分配器 / Do not propagate allocator on container swap
     
     // 相等性特性：指示所有实例是否总是相等
-    using is_always_equal = mystl::true_type;
+    // Equality traits: indicate whether all instances are always equal
+    using is_always_equal = mystl::true_type; ///< 所有实例总是相等（无状态分配器） / All instances are always equal (stateless allocator)
     
     // ==================== 重新绑定机制 ====================
     /**
@@ -79,10 +84,15 @@ public:
      * 
      * 允许容器从allocator<T>获取allocator<U>类型。
      * 例如：std::list<int, allocator<int>>需要allocator<std::_List_node<int>>。
+     * 
+     * Allows containers to obtain allocator<U> type from allocator<T>.
+     * Example: std::list<int, allocator<int>> needs allocator<std::_List_node<int>>.
+     * 
+     * @tparam U 重新绑定的目标类型 / Target type for rebinding
      */
     template<typename U>
     struct rebind {
-        using other = allocator<U>;
+        using other = allocator<U>; ///< 重新绑定后的分配器类型 / Rebound allocator type
     };
     
     // ==================== 构造函数和析构函数 ====================
@@ -93,6 +103,9 @@ public:
      * @brief 从其他类型分配器的转换构造函数
      * 
      * 允许从allocator<U>构造allocator<T>，用于重新绑定场景。
+     * Allows constructing allocator<T> from allocator<U>, used in rebinding scenarios.
+     * 
+     * @tparam U 源分配器的元素类型 / Element type of source allocator
      */
     template<typename U>
     allocator(const allocator<U>&) noexcept {}
@@ -126,21 +139,32 @@ public:
     
     /**
      * @brief 构造对象 (C++11)
-     * @param p 要构造对象的内存位置
-     * @param args 构造参数
+     * @param p 要构造对象的内存位置 / Memory location to construct object at
+     * @param args 构造参数 / Construction arguments
      * 
      * 注意：C++17中此函数被弃用，建议使用allocator_traits::construct。
      * C++20中此成员函数被移除。
+     * 
+     * Note: This function is deprecated in C++17, use allocator_traits::construct instead.
+     * This member function is removed in C++20.
+     * 
+     * @tparam U 要构造的对象类型（可以是T或其他类型） / Type of object to construct (can be T or other type)
+     * @tparam Args 参数包类型 / Parameter pack type
      */
     template<typename U, typename... Args>
     void construct(U* p, Args&&... args);
     
     /**
      * @brief 销毁对象 (C++11)
-     * @param p 要销毁对象的指针
+     * @param p 要销毁对象的指针 / Pointer to object to destroy
      * 
      * 注意：C++17中此函数被弃用，建议使用allocator_traits::destroy。
      * C++20中此成员函数被移除。
+     * 
+     * Note: This function is deprecated in C++17, use allocator_traits::destroy instead.
+     * This member function is removed in C++20.
+     * 
+     * @tparam U 要销毁的对象类型（可以是T或其他类型） / Type of object to destroy (can be T or other type)
      */
     template<typename U>
     void destroy(U* p);
@@ -170,12 +194,15 @@ public:
     
     /**
      * @brief 带提示的内存分配 (C++20)
-     * @param n 要分配的元素数量
-     * @param hint 分配提示（通常被忽略）
-     * @return 指向分配内存的指针
+     * @param n 要分配的元素数量 / Number of elements to allocate
+     * @param hint 分配提示（通常被忽略） / Allocation hint (usually ignored)
+     * @return 指向分配内存的指针 / Pointer to allocated memory
      * 
      * 注意：这是C++20新增的可选接口，用于优化分配位置。
      * 标准允许实现忽略hint参数。
+     * 
+     * Note: This is an optional interface added in C++20 for optimizing allocation location.
+     * The standard allows implementations to ignore the hint parameter.
      */
     [[nodiscard]] pointer allocate(size_type n, const_void_pointer hint);
 };

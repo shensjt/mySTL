@@ -38,10 +38,14 @@
 
 // Check C++ version
 // 检查C++版本
+// Ensure C++ compiler is being used
+// 确保使用C++编译器
 #ifndef __cplusplus
 #error "mySTL requires C++"
 #endif
 
+// Ensure C++11 or later is being used
+// 确保使用C++11或更高版本
 #if __cplusplus < 201103L
 #error "mySTL memory module requires C++11 or later"
 #endif
@@ -55,15 +59,24 @@
 
 // Allocators
 // 分配器
+// Standard allocator following C++11 specification
+// 遵循C++11规范的标准分配器
 #include "allocator.hpp"
+
+// Memory pool allocator for small object optimization
+// 用于小对象优化的内存池分配器
 #include "pool_allocator.hpp"
 
 // Memory operations
 // 内存操作
+// Uninitialized memory construction, copying, moving, filling, and destruction
+// 未初始化内存的构造、复制、移动、填充和销毁
 #include "uninitialized.hpp"
 
 // Memory utilities
 // 内存工具
+// Temporary buffer management for algorithm workspace
+// 用于算法工作空间的临时缓冲区管理
 #include "temporary_buffer.hpp"
 
 // ============================================================================

@@ -44,28 +44,37 @@ namespace mystl {
 
 /**
  * @brief 获取临时缓冲区
- * @tparam T 元素类型
- * @param count 请求的元素数量
- * @return mystl::pair<T*, std::ptrdiff_t> 分配的缓冲区和实际大小
+ * @tparam T 元素类型 / Element type
+ * @param count 请求的元素数量 / Requested number of elements
+ * @return mystl::pair<T*, std::ptrdiff_t> 分配的缓冲区和实际大小 / Allocated buffer and actual size
  * 
  * 尝试分配至少能容纳count个T类型对象的临时内存。
  * 如果分配失败，可能返回少于count的内存。
  * 如果完全无法分配，返回{nullptr, 0}。
  * 
+ * Attempts to allocate temporary memory for at least count objects of type T.
+ * If allocation fails, may return less memory than requested.
+ * If completely unable to allocate, returns {nullptr, 0}.
+ * 
  * 保证不抛出异常（noexcept）。
+ * Guaranteed not to throw exceptions (noexcept).
  */
 template <typename T>
 mystl::pair<T*, std::ptrdiff_t> get_temporary_buffer(std::ptrdiff_t count) noexcept;
 
 /**
  * @brief 释放临时缓冲区
- * @tparam T 元素类型
- * @param p 要释放的缓冲区指针
+ * @tparam T 元素类型 / Element type
+ * @param p 要释放的缓冲区指针 / Pointer to buffer to release
  * 
  * 释放由get_temporary_buffer分配的内存。
  * p必须是由get_temporary_buffer返回的指针。
  * 
+ * Releases memory allocated by get_temporary_buffer.
+ * p must be a pointer returned by get_temporary_buffer.
+ * 
  * 保证不抛出异常（noexcept）。
+ * Guaranteed not to throw exceptions (noexcept).
  */
 template <typename T>
 void return_temporary_buffer(T* p) noexcept;
@@ -76,32 +85,39 @@ void return_temporary_buffer(T* p) noexcept;
 
 /**
  * @brief 临时缓冲区RAII包装器
- * @tparam T 元素类型
+ * @tparam T 元素类型 / Element type
  * 
  * 提供临时缓冲区的自动资源管理。
  * 构造时获取缓冲区，析构时自动释放。
  * 支持移动语义，禁止拷贝。
+ * 
+ * Provides automatic resource management for temporary buffers.
+ * Acquires buffer on construction, automatically releases on destruction.
+ * Supports move semantics, copy is prohibited.
  */
 template <typename T>
 class temporary_buffer {
 public:
     // ==================== 类型定义 ====================
-    using value_type = T;
-    using pointer = T*;
-    using const_pointer = const T*;
-    using reference = T&;
-    using const_reference = const T&;
-    using size_type = std::ptrdiff_t;
-    using difference_type = std::ptrdiff_t;
+    using value_type = T;          ///< 元素类型 / Element type
+    using pointer = T*;            ///< 指针类型 / Pointer type
+    using const_pointer = const T*; ///< 常量指针类型 / Const pointer type
+    using reference = T&;          ///< 引用类型 / Reference type
+    using const_reference = const T&; ///< 常量引用类型 / Const reference type
+    using size_type = std::ptrdiff_t; ///< 大小类型 / Size type
+    using difference_type = std::ptrdiff_t; ///< 差异类型 / Difference type
     
     // ==================== 构造函数和析构函数 ====================
     
     /**
      * @brief 构造函数
-     * @param count 请求的缓冲区大小（元素数量）
+     * @param count 请求的缓冲区大小（元素数量） / Requested buffer size (number of elements)
      * 
      * 构造时尝试获取指定大小的临时缓冲区。
      * 如果获取失败，缓冲区为空。
+     * 
+     * Attempts to acquire a temporary buffer of specified size on construction.
+     * If acquisition fails, the buffer is empty.
      */
     explicit temporary_buffer(size_type count) noexcept;
     
@@ -120,11 +136,15 @@ public:
     
     /**
      * @brief 移动构造函数
+     * 
+     * Move constructor.
      */
     temporary_buffer(temporary_buffer&& other) noexcept;
     
     /**
      * @brief 移动赋值运算符
+     * 
+     * Move assignment operator.
      */
     temporary_buffer& operator=(temporary_buffer&& other) noexcept;
     
@@ -132,36 +152,58 @@ public:
     
     /**
      * @brief 获取缓冲区指针
+     * @return 缓冲区指针 / Buffer pointer
+     * 
+     * Gets the buffer pointer.
      */
     pointer data() const noexcept { return data_; }
     
     /**
      * @brief 获取缓冲区大小
+     * @return 缓冲区大小（元素数量） / Buffer size (number of elements)
+     * 
+     * Gets the buffer size.
      */
     size_type size() const noexcept { return size_; }
     
     /**
      * @brief 检查缓冲区是否为空
+     * @return 缓冲区是否为空 / Whether buffer is empty
+     * 
+     * Checks if the buffer is empty.
      */
     bool empty() const noexcept { return size_ == 0; }
     
     /**
      * @brief 布尔转换运算符
+     * @return 缓冲区是否有效（非空） / Whether buffer is valid (non-null)
+     * 
+     * Boolean conversion operator.
      */
     explicit operator bool() const noexcept { return data_ != nullptr; }
     
     /**
      * @brief 获取起始迭代器
+     * @return 指向缓冲区起始的迭代器 / Iterator pointing to buffer beginning
+     * 
+     * Gets the beginning iterator.
      */
     pointer begin() const noexcept { return data_; }
     
     /**
      * @brief 获取结束迭代器
+     * @return 指向缓冲区结束的迭代器 / Iterator pointing to buffer end
+     * 
+     * Gets the end iterator.
      */
     pointer end() const noexcept { return data_ + size_; }
     
     /**
      * @brief 元素访问（不检查边界）
+     * @param n 元素索引 / Element index
+     * @return 第n个元素的引用 / Reference to nth element
+     * 
+     * Element access (no bounds checking).
      */
     reference operator[](size_type n) const { return data_[n]; }
     

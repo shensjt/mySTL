@@ -47,84 +47,221 @@ namespace mystl {
 
 /**
  * @brief 将范围中的元素复制到未初始化内存
- * @param first, last 要复制的输入范围
- * @param d_first 目标范围的起始位置
- * @return 指向最后复制的元素之后的位置的迭代器
+ * @param first, last 要复制的输入范围 / Input range to copy from
+ * @param d_first 目标范围的起始位置 / Beginning of destination range
+ * @return 指向最后复制的元素之后的位置的迭代器 / Iterator to element past the last copied
  * 
  * 如果复制过程中抛出异常，已构造的元素会被销毁。
  * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during copying, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam InputIt 输入迭代器类型 / Input iterator type
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename InputIt, typename ForwardIt>
 ForwardIt uninitialized_copy(InputIt first, InputIt last, ForwardIt d_first);
 
 /**
  * @brief 从指定位置开始复制n个元素到未初始化内存
+ * @param first 要复制的起始位置 / Beginning position to copy from
+ * @param count 要复制的元素数量 / Number of elements to copy
+ * @param d_first 目标范围的起始位置 / Beginning of destination range
+ * @return 指向最后复制的元素之后的位置的迭代器 / Iterator to element past the last copied
+ * 
+ * 如果复制过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during copying, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam InputIt 输入迭代器类型 / Input iterator type
+ * @tparam Size 大小类型 / Size type
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename InputIt, typename Size, typename ForwardIt>
 ForwardIt uninitialized_copy_n(InputIt first, Size count, ForwardIt d_first);
 
 /**
  * @brief 用指定值填充未初始化内存范围
+ * @param first, last 要填充的范围 / Range to fill
+ * @param value 填充值 / Value to fill with
+ * 
+ * 如果填充过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during filling, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
+ * @tparam T 值类型 / Value type
  */
 template <typename ForwardIt, typename T>
 void uninitialized_fill(ForwardIt first, ForwardIt last, const T& value);
 
 /**
  * @brief 从指定位置开始用指定值填充n个元素
+ * @param first 要填充的起始位置 / Beginning position to fill from
+ * @param count 要填充的元素数量 / Number of elements to fill
+ * @param value 填充值 / Value to fill with
+ * @return 指向最后填充的元素之后的位置的迭代器 / Iterator to element past the last filled
+ * 
+ * 如果填充过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during filling, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
+ * @tparam Size 大小类型 / Size type
+ * @tparam T 值类型 / Value type
  */
 template <typename ForwardIt, typename Size, typename T>
 ForwardIt uninitialized_fill_n(ForwardIt first, Size count, const T& value);
 
 /**
  * @brief 将范围中的元素移动到未初始化内存
+ * @param first, last 要移动的输入范围 / Input range to move from
+ * @param d_first 目标范围的起始位置 / Beginning of destination range
+ * @return 指向最后移动的元素之后的位置的迭代器 / Iterator to element past the last moved
+ * 
+ * 如果移动过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during moving, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam InputIt 输入迭代器类型 / Input iterator type
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename InputIt, typename ForwardIt>
 ForwardIt uninitialized_move(InputIt first, InputIt last, ForwardIt d_first);
 
 /**
  * @brief 从指定位置开始移动n个元素到未初始化内存
+ * @param first 要移动的起始位置 / Beginning position to move from
+ * @param count 要移动的元素数量 / Number of elements to move
+ * @param d_first 目标范围的起始位置 / Beginning of destination range
+ * @return 指向最后移动的元素之后的位置的迭代器 / Iterator to element past the last moved
+ * 
+ * 如果移动过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during moving, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam InputIt 输入迭代器类型 / Input iterator type
+ * @tparam Size 大小类型 / Size type
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename InputIt, typename Size, typename ForwardIt>
 ForwardIt uninitialized_move_n(InputIt first, Size count, ForwardIt d_first);
 
 /**
  * @brief 在未初始化内存范围上默认构造元素
+ * @param first, last 要构造的范围 / Range to construct
+ * 
+ * 如果构造过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during construction, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename ForwardIt>
 void uninitialized_default_construct(ForwardIt first, ForwardIt last);
 
 /**
  * @brief 从指定位置开始默认构造n个元素
+ * @param first 要构造的起始位置 / Beginning position to construct from
+ * @param count 要构造的元素数量 / Number of elements to construct
+ * @return 指向最后构造的元素之后的位置的迭代器 / Iterator to element past the last constructed
+ * 
+ * 如果构造过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during construction, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
+ * @tparam Size 大小类型 / Size type
  */
 template <typename ForwardIt, typename Size>
 ForwardIt uninitialized_default_construct_n(ForwardIt first, Size count);
 
 /**
  * @brief 在未初始化内存范围上值初始化元素
+ * @param first, last 要值初始化的范围 / Range to value-initialize
+ * 
+ * 如果构造过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during construction, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename ForwardIt>
 void uninitialized_value_construct(ForwardIt first, ForwardIt last);
 
 /**
  * @brief 从指定位置开始值初始化n个元素
+ * @param first 要值初始化的起始位置 / Beginning position to value-initialize from
+ * @param count 要值初始化的元素数量 / Number of elements to value-initialize
+ * @return 指向最后值初始化的元素之后的位置的迭代器 / Iterator to element past the last value-initialized
+ * 
+ * 如果构造过程中抛出异常，已构造的元素会被销毁。
+ * 提供强异常安全保证。
+ * 
+ * If an exception is thrown during construction, already constructed elements are destroyed.
+ * Provides strong exception safety guarantee.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
+ * @tparam Size 大小类型 / Size type
  */
 template <typename ForwardIt, typename Size>
 ForwardIt uninitialized_value_construct_n(ForwardIt first, Size count);
 
 /**
  * @brief 销毁范围中的元素
+ * @param first, last 要销毁的范围 / Range to destroy
+ * 
+ * 销毁范围中的元素，但不释放内存。
+ * 
+ * Destroys elements in the range, but does not deallocate memory.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
  */
 template <typename ForwardIt>
 void destroy(ForwardIt first, ForwardIt last);
 
 /**
  * @brief 从指定位置开始销毁n个元素
+ * @param first 要销毁的起始位置 / Beginning position to destroy from
+ * @param count 要销毁的元素数量 / Number of elements to destroy
+ * @return 指向最后销毁的元素之后的位置的迭代器 / Iterator to element past the last destroyed
+ * 
+ * 销毁元素，但不释放内存。
+ * 
+ * Destroys elements, but does not deallocate memory.
+ * 
+ * @tparam ForwardIt 前向迭代器类型 / Forward iterator type
+ * @tparam Size 大小类型 / Size type
  */
 template <typename ForwardIt, typename Size>
 ForwardIt destroy_n(ForwardIt first, Size count);
 
 /**
  * @brief 销毁指定位置的对象
+ * @param location 要销毁的对象指针 / Pointer to object to destroy
+ * 
+ * 销毁指定位置的对象，但不释放内存。
+ * 
+ * Destroys object at specified location, but does not deallocate memory.
+ * 
+ * @tparam T 对象类型 / Object type
  */
 template <typename T>
 void destroy_at(T* location);
