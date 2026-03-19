@@ -202,13 +202,6 @@ private:
      */
     void deallocate_aligned(void* p, std::size_t size) noexcept;
     
-    /**
-     * @brief 将内存块添加到空闲链表（模仿GCC）
-     * @param block 内存块指针 / Memory block pointer
-     * @param size 内存块大小 / Memory block size
-     * @param index 池索引 / Pool index
-     */
-    void add_block_to_free_list(void* block, std::size_t size, std::size_t index);
     
 public:
     // ==================== 构造函数和析构函数 ====================
@@ -391,38 +384,6 @@ inline void MemoryPool::deallocate(void* p, std::size_t n) noexcept {
     free_lists_[index] = node;
 }
 
-// 将内存块添加到空闲链表
-inline void MemoryPool::add_block_to_free_list(void* block, std::size_t size, std::size_t index) {
-    // 将一个大块分割成多个小块，添加到空闲链表
-    char* current = static_cast<char*>(block);
-    std::size_t block_size = PoolConfig::pool_sizes[index];
-    std::size_t num_blocks = size / block_size;
-    
-    FreeNode* first = nullptr;
-    FreeNode* last = nullptr;
-    
-    for (std::size_t i = 0; i < num_blocks; ++i) {
-        FreeNode* node = reinterpret_cast<FreeNode*>(current);
-        node->next = nullptr;
-        
-        if (last) {
-            last->next = node;
-            last = node;
-        } else {
-            first = last = node;
-        }
-        
-        current += block_size;
-    }
-    
-    // 将链表连接到空闲链表
-    if (first) {
-        if (free_lists_[index]) {
-            last->next = free_lists_[index];
-        }
-        free_lists_[index] = first;
-    }
-}
 
 // ============================================================================
 // 线程局部内存池获取函数（模仿GCC）
