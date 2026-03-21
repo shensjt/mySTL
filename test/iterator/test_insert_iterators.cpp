@@ -13,7 +13,7 @@
  * - front_insert_iterator：在容器开头插入元素
  * - insert_iterator：在容器的特定位置插入元素
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-19
  * 
  * @see back_insert_iterator.hpp

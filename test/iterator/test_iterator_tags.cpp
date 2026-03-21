@@ -15,7 +15,7 @@
  * 
  * @note 测试涵盖所有迭代器标签类型及其关系。
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-17
  * 
  * @see include/iterator/iterator_tags.hpp

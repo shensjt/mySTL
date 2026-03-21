@@ -23,7 +23,7 @@
  * - 边界情况和错误处理
  * - 输入和输出迭代器之间的集成
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-19
  * 
  * @see istream_iterator.hpp

@@ -15,7 +15,7 @@
  * 
  * 测试按 reverse_iterator 功能的不同方面组织成逻辑部分。
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-19
  * 
  * @see reverse_iterator.hpp

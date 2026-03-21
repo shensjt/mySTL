@@ -15,7 +15,7 @@
  * 
  * 测试按 list 功能的不同方面组织成逻辑部分。
  * 
- * @author mySTL Team / mySTL 团队
+ * @author shensjt
  * @date 2026-03-21 / 2026年3月21日
  * 
  * @see include/mystl/list.hpp

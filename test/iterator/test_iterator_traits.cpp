@@ -16,7 +16,7 @@
  * 
  * @note 测试涵盖自定义迭代器、原始指针、const/volatile 指针、C 数组和运行时行为。
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-17
  * 
  * @see include/iterator/iterator_traits.hpp

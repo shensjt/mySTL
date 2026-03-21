@@ -16,7 +16,7 @@
  * 
  * @note 测试使用自定义迭代器和原始指针，避免依赖标准库容器。
  * 
- * @author mySTL shensjt
+ * @author shensjt
  * @date 2026-03-17
  * 
  * @see include/iterator/iterator_functions.hpp
