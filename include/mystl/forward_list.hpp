@@ -2064,6 +2064,140 @@ public:
             }
         }
     }
+
+    /**
+     * @brief Erases elements from the forward_list
+     * @brief 从forward_list中删除元素
+     * 
+     * @tparam UnaryPredicate Type of the predicate function
+     * @tparam UnaryPredicate 谓词函数的类型
+     * @param p Unary predicate that returns true for elements to erase
+     * @param p 一元谓词，对于要删除的元素返回true
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements from the forward_list for which predicate `p` returns true.
+     * The predicate is applied to each element in the forward_list.
+     * Returns the number of elements that were erased.
+     * 
+     * @details
+     * 从forward_list中删除所有谓词`p`返回true的元素。
+     * 谓词应用于forward_list中的每个元素。
+     * 返回被删除的元素数量。
+     * 
+     * @note Time complexity: O(n) where n is the number of elements in the forward_list
+     * @note 时间复杂度：O(n)，其中n是forward_list中的元素数量
+     * 
+     * @note This function does not throw exceptions unless the predicate
+     * or element destruction throws.
+     * 
+     * @note 此函数不会抛出异常，除非谓词或元素销毁抛出异常。
+     * 
+     * @note The predicate must be callable with `const T&` and return
+     * a value convertible to bool.
+     * 
+     * @note 谓词必须可以使用`const T&`调用，并返回可转换为bool的值。
+     * 
+     * @note The function traverses the forward_list once, erasing elements
+     * for which the predicate returns true.
+     * 
+     * @note 函数遍历forward_list一次，删除谓词返回true的元素。
+     * 
+     * @note Iterators and references to erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @see remove_if()
+     * @see erase()
+     * @see 参考 remove_if()
+     * @see 参考 erase()
+     */
+    template<typename UnaryPredicate>
+    size_type erase_if(UnaryPredicate p) {
+        size_type erased_count = 0;
+        node_pointer prev = &head_;
+        node_pointer current = head_.next;
+
+        while (current != nullptr) {
+            if (p(current->value)) {
+                // 删除当前节点
+                prev->next = current->next;
+                destroy_node(current);
+                current = prev->next;
+                ++erased_count;
+            } else {
+                prev = current;
+                current = current->next;
+            }
+        }
+        return erased_count;
+    }
+
+    /**
+     * @brief Erases elements equal to the specified value
+     * @brief 删除等于指定值的元素
+     * 
+     * @param value Value to compare elements against
+     * @param value 用于比较元素的值
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements from the forward_list that compare equal to `value`.
+     * The elements are removed using the equality operator (==).
+     * Returns the number of elements that were erased.
+     * 
+     * @details
+     * 从forward_list中删除所有等于`value`的元素。
+     * 使用相等操作符（==）比较元素。
+     * 返回被删除的元素数量。
+     * 
+     * @note Time complexity: O(n) where n is the number of elements in the forward_list
+     * @note 时间复杂度：O(n)，其中n是forward_list中的元素数量
+     * 
+     * @note This function does not throw exceptions unless the equality
+     * comparison or element destruction throws.
+     * 
+     * @note 此函数不会抛出异常，除非相等比较或元素销毁抛出异常。
+     * 
+     * @note The function traverses the forward_list once, erasing matching elements
+     * as they are encountered.
+     * 
+     * @note 函数遍历forward_list一次，遇到匹配的元素时立即删除。
+     * 
+     * @note Iterators and references to erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @see remove()
+     * @see erase_if()
+     * @see 参考 remove()
+     * @see 参考 erase_if()
+     */
+    size_type erase(const T& value) {
+        size_type erased_count = 0;
+        node_pointer prev = &head_;
+        node_pointer current = head_.next;
+
+        while (current != nullptr) {
+            if (current->value == value) {
+                // 删除当前节点
+                prev->next = current->next;
+                destroy_node(current);
+                current = prev->next;
+                ++erased_count;
+            } else {
+                prev = current;
+                current = current->next;
+            }
+        }
+        return erased_count;
+    }
     
     /**
      * @brief Remove consecutive duplicate elements
@@ -2561,23 +2695,29 @@ public:
      * @tparam Args 转发给构造函数的参数类型
      * @param args Arguments to forward to the constructor
      * @param args 转发给构造函数的参数
+     * @return Reference to the constructed element
+     * @return 对构造元素的引用
      * 
      * @details
      * Constructs an element in-place at the beginning of the forward_list.
      * The element is constructed using perfect forwarding of the provided arguments.
      * This avoids unnecessary copies or moves that would occur with push_front().
+     * Returns a reference to the newly constructed element (C++17 feature).
      * 
      * @details
      * 在forward_list的开头原位构造元素。
      * 使用提供的参数的完美转发来构造元素。
      * 这避免了使用push_front()时可能发生的不必要的拷贝或移动。
+     * 返回对新构造元素的引用（C++17特性）。
      * 
      * @note Time complexity: O(1)
      * @note 时间复杂度：O(1)
      */
     template<typename... Args>
-    void emplace_front(Args&&... args) {
-        head_.next = create_node(head_.next, mystl::forward<Args>(args)...);
+    reference emplace_front(Args&&... args) {
+        node_pointer new_node = create_node(head_.next, mystl::forward<Args>(args)...);
+        head_.next = new_node;
+        return new_node->value;
     }
     
     /**

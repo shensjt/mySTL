@@ -22,6 +22,7 @@ bin/
 
 # Documentation directory (not to be uploaded)
 doc/
+docs/
 
 # OS generated files
 .DS_Store

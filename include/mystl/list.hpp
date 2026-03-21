@@ -912,7 +912,7 @@ private:
          * @brief 是否在交换时传播
          */
         using propagate_on_container_swap = mystl::false_type;
-        
+
         /**
          * @brief Whether allocators are always equal
          * @brief 分配器是否总是相等
@@ -956,19 +956,19 @@ private:
         node_type* allocate(std::size_t n) {
             return static_cast<node_type*>(::operator new(n * sizeof(node_type)));
         }
-        
+
         /**
          * @brief Deallocates memory for nodes
          * @brief 释放节点的内存
-         * 
+         *
          * @param p Pointer to the memory to deallocate
          * @param p 指向要释放的内存的指针
          * @param n Number of nodes (unused in this implementation)
          * @param n 节点数量（在此实现中未使用）
-         * 
+         *
          * @details Deallocates memory previously allocated by allocate().
          * Uses `::operator delete` for simplicity.
-         * 
+         *
          * @details 释放先前由allocate()分配的内存。
          * 为简化实现，使用`::operator delete`。
          */
@@ -2852,16 +2852,20 @@ public:
      * @tparam Args 元素构造的参数类型
      * @param args Arguments to forward to element constructor
      * @param args 转发给元素构造函数的参数
+     * @return Reference to the constructed element
+     * @return 对构造元素的引用
      * 
      * @details
      * Constructs an element in-place at the end of the list.
      * The element is constructed directly in the list's memory,
      * avoiding unnecessary copies or moves.
+     * Returns a reference to the newly constructed element (C++17 feature).
      * 
      * @details
      * 在list的末尾原位构造元素。
      * 元素直接在list的内存中构造，
      * 避免不必要的拷贝或移动。
+     * 返回对新构造元素的引用（C++17特性）。
      * 
      * @note Time complexity: O(1)
      * @note 时间复杂度：O(1)
@@ -2884,8 +2888,8 @@ public:
      * @see 参考 push_back()
      */
     template<typename... Args>
-    void emplace_back(Args&&... args) {
-        insert(end(), mystl::forward<Args>(args)...);
+    reference emplace_back(Args&&... args) {
+        return *insert(end(), mystl::forward<Args>(args)...);
     }
     
     /**
@@ -3677,11 +3681,145 @@ public:
             current = next;
         }
     }
-    
+
+    /**
+     * @brief Erases elements from the list
+     * @brief 从list中删除元素
+     * 
+     * @tparam UnaryPredicate Type of the predicate function
+     * @tparam UnaryPredicate 谓词函数的类型
+     * @param p Unary predicate that returns true for elements to erase
+     * @param p 一元谓词，对于要删除的元素返回true
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements from the list for which predicate `p` returns true.
+     * The predicate is applied to each element in the list.
+     * Returns the number of elements that were erased.
+     * 
+     * @details
+     * 从list中删除所有谓词`p`返回true的元素。
+     * 谓词应用于list中的每个元素。
+     * 返回被删除的元素数量。
+     * 
+     * @note Time complexity: O(n) where n is the size of the list
+     * @note 时间复杂度：O(n)，其中n是list的大小
+     * 
+     * @note This function does not throw exceptions unless the predicate
+     * or element destruction throws.
+     * 
+     * @note 此函数不会抛出异常，除非谓词或元素销毁抛出异常。
+     * 
+     * @note The predicate must be callable with `const T&` and return
+     * a value convertible to bool.
+     * 
+     * @note 谓词必须可以使用`const T&`调用，并返回可转换为bool的值。
+     * 
+     * @note The function traverses the list once, erasing elements
+     * for which the predicate returns true.
+     * 
+     * @note 函数遍历list一次，删除谓词返回true的元素。
+     * 
+     * @note Iterators and references to erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @see remove_if()
+     * @see erase()
+     * @see 参考 remove_if()
+     * @see 参考 erase()
+     */
+    template<typename UnaryPredicate>
+    size_type erase_if(UnaryPredicate p) {
+        size_type erased_count = 0;
+        node_type* current = sentinel_->next;
+        while (current != sentinel_) {
+            node_type* next = current->next;
+            if (p(current->value)) {
+                // 从链表中移除节点
+                current->prev->next = current->next;
+                current->next->prev = current->prev;
+                
+                // 销毁节点
+                destroy_node(current);
+                --size_;
+                ++erased_count;
+            }
+            current = next;
+        }
+        return erased_count;
+    }
+
+    /**
+     * @brief Erases elements equal to the specified value
+     * @brief 删除等于指定值的元素
+     * 
+     * @param value Value to compare elements against
+     * @param value 用于比较元素的值
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements from the list that compare equal to `value`.
+     * The elements are removed using the equality operator (==).
+     * Returns the number of elements that were erased.
+     * 
+     * @details
+     * 从list中删除所有等于`value`的元素。
+     * 使用相等操作符（==）比较元素。
+     * 返回被删除的元素数量。
+     * 
+     * @note Time complexity: O(n) where n is the size of the list
+     * @note 时间复杂度：O(n)，其中n是list的大小
+     * 
+     * @note This function does not throw exceptions unless the equality
+     * comparison or element destruction throws.
+     * 
+     * @note 此函数不会抛出异常，除非相等比较或元素销毁抛出异常。
+     * 
+     * @note The function traverses the list once, erasing matching elements
+     * as they are encountered.
+     * 
+     * @note 函数遍历list一次，遇到匹配的元素时立即删除。
+     * 
+     * @note Iterators and references to erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @see remove()
+     * @see erase_if()
+     * @see 参考 remove()
+     * @see 参考 erase_if()
+     */
+    size_type erase(const T& value) {
+        size_type erased_count = 0;
+        node_type* current = sentinel_->next;
+        while (current != sentinel_) {
+            node_type* next = current->next;
+            if (current->value == value) {
+                // 从链表中移除节点
+                current->prev->next = current->next;
+                current->next->prev = current->prev;
+                
+                // 销毁节点
+                destroy_node(current);
+                --size_;
+                ++erased_count;
+            }
+            current = next;
+        }
+        return erased_count;
+    }
+
     /**
      * @brief Removes consecutive duplicate elements
      * @brief 删除连续重复元素
-     * 
+     *
      * @details
      * Removes all but the first element from every consecutive group of
      * equal elements in the list. Only consecutive duplicates are removed;

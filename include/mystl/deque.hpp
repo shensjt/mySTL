@@ -2232,16 +2232,20 @@ public:
      * @tparam Args 转发给构造函数的参数类型
      * @param args Arguments to forward to the constructor
      * @param args 转发给构造函数的参数
+     * @return Reference to the constructed element
+     * @return 对构造元素的引用
      * 
      * @details
      * Constructs an element in-place at the end of the deque.
      * The element is constructed using perfect forwarding of the provided arguments.
      * This avoids unnecessary copies or moves that would occur with push_back().
+     * Returns a reference to the newly constructed element (C++17 feature).
      * 
      * @details
      * 在deque的末尾原位构造元素。
      * 使用提供的参数的完美转发来构造元素。
      * 这避免了使用push_back()时可能发生的不必要的拷贝或移动。
+     * 返回对新构造元素的引用（C++17特性）。
      * 
      * @note
      * If the current buffer is full, a new buffer is allocated.
@@ -2255,7 +2259,7 @@ public:
      * @note 时间复杂度：摊还O(1)
      */
     template<typename... Args>
-    void emplace_back(Args&&... args) {
+    reference emplace_back(Args&&... args) {
         if (!map_) {
             // 第一次插入，需要初始化map
             create_map(1);
@@ -2263,9 +2267,11 @@ public:
             start_offset_ = finish_offset_ = 0;
         }
         
+        pointer new_element;
         if (finish_offset_ < buffer_size) {
             // 当前块还有空间，在当前块内构造元素
-            alloc_traits::construct(alloc_, map_[finish_] + finish_offset_, mystl::forward<Args>(args)...);
+            new_element = map_[finish_] + finish_offset_;
+            alloc_traits::construct(alloc_, new_element, mystl::forward<Args>(args)...);
             ++finish_offset_;
         } else {
             // 需要分配新块
@@ -2275,9 +2281,11 @@ public:
             ++finish_;
             finish_offset_ = 1;
             map_[finish_] = allocate_buffer();  // 分配新缓冲区
-            alloc_traits::construct(alloc_, map_[finish_], mystl::forward<Args>(args)...);  // 在新缓冲区构造元素
+            new_element = map_[finish_];
+            alloc_traits::construct(alloc_, new_element, mystl::forward<Args>(args)...);  // 在新缓冲区构造元素
         }
         ++size_;
+        return *new_element;
     }
     
     /**
@@ -2704,6 +2712,61 @@ public:
             pop_back();  // 移除最后一个元素
         }
         return begin() + index;
+    }
+    
+    /**
+     * @brief Erase elements that satisfy a predicate
+     * @brief 删除满足谓词的元素
+     * 
+     * @tparam Predicate Type of the predicate function
+     * @tparam Predicate 谓词函数类型
+     * @param pred Unary predicate which returns true for elements to be removed
+     * @param pred 一元谓词，对于要删除的元素返回true
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements that satisfy the predicate pred from the deque.
+     * This function is equivalent to the C++20 erase_if member function.
+     * The algorithm preserves the relative order of the remaining elements.
+     * 
+     * @details
+     * 从deque中删除所有满足谓词pred的元素。
+     * 此函数等价于C++20的erase_if成员函数。
+     * 算法保留剩余元素的相对顺序。
+     * 
+     * @note
+     * Invalidates iterators and references to the erased elements.
+     * 
+     * @note
+     * 使指向被删除元素的迭代器和引用失效。
+     * 
+     * @note Time complexity: O(n) where n is the number of elements
+     * @note 时间复杂度：O(n)，其中n是元素数量
+     */
+    template<typename Predicate>
+    size_type erase_if(Predicate pred) {
+        size_type old_size = size_;
+        iterator write = begin();
+        iterator read = begin();
+        
+        while (read != end()) {
+            if (!pred(*read)) {
+                if (write != read) {
+                    *write = mystl::move(*read);
+                }
+                ++write;
+            }
+            ++read;
+        }
+        
+        // 删除末尾多余的元素
+        size_type erased = old_size - size_type(write - begin());
+        while (write != end()) {
+            pop_back();
+        }
+        
+        return erased;
     }
     
     /**
@@ -3206,7 +3269,62 @@ public:
     bool operator>=(const deque& other) const {
         return !(*this < other);
     }
-    
+
+    /**
+     * @brief Erases elements equal to the specified value
+     * @brief 删除等于指定值的元素
+     * 
+     * @param value Value to compare elements against
+     * @param value 用于比较元素的值
+     * @return Number of elements erased
+     * @return 删除的元素数量
+     * 
+     * @details
+     * Erases all elements from the deque that compare equal to `value`.
+     * The elements are removed using the equality operator (==).
+     * Returns the number of elements that were erased.
+     * 
+     * @details
+     * 从deque中删除所有等于`value`的元素。
+     * 使用相等操作符（==）比较元素。
+     * 返回被删除的元素数量。
+     * 
+     * @note Time complexity: O(n) where n is the number of elements in the deque
+     * @note 时间复杂度：O(n)，其中n是deque中的元素数量
+     * 
+     * @note This function does not throw exceptions unless the equality
+     * comparison or element destruction throws.
+     * 
+     * @note 此函数不会抛出异常，除非相等比较或元素销毁抛出异常。
+     * 
+     * @note The function traverses the deque once, erasing matching elements
+     * as they are encountered.
+     * 
+     * @note 函数遍历deque一次，遇到匹配的元素时立即删除。
+     * 
+     * @note Iterators and references to erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @see erase_if()
+     * @see 参考 erase_if()
+     */
+    size_type erase(const T& value) {
+        size_type erased_count = 0;
+        iterator it = begin();
+        while (it != end()) {
+            if (*it == value) {
+                it = erase(it);
+                ++erased_count;
+            } else {
+                ++it;
+            }
+        }
+        return erased_count;
+    }
+
 private:
     /**
      * @brief Allocate a new buffer

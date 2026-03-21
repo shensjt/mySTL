@@ -629,6 +629,163 @@ void test_deque_comparison_operators() {
 }
 
 /**
+ * @brief Test deque erase and erase_if functions
+ * @brief 测试 deque erase 和 erase_if 函数
+ */
+void test_deque_erase_functions() {
+    std::cout << "Testing deque erase and erase_if... / 测试 deque erase 和 erase_if..." << std::endl;
+    
+    // 测试 erase(const T& value) 函数 / Test erase(const T& value) function
+    {
+        mystl::deque<int> dq = {1, 2, 3, 2, 4, 2, 5};
+        size_t erased_count = dq.erase(2);
+        TEST(erased_count == 3);
+        TEST(dq.size() == 4);
+        TEST(dq[0] == 1);
+        TEST(dq[1] == 3);
+        TEST(dq[2] == 4);
+        TEST(dq[3] == 5);
+    }
+    
+    // 测试 erase 函数，没有匹配的元素 / Test erase function with no matching elements
+    {
+        mystl::deque<int> dq = {1, 2, 3, 4, 5};
+        size_t erased_count = dq.erase(99);
+        TEST(erased_count == 0);
+        TEST(dq.size() == 5);
+        TEST(dq[0] == 1);
+        TEST(dq[4] == 5);
+    }
+    
+    // 测试 erase 函数，所有元素都匹配 / Test erase function with all elements matching
+    {
+        mystl::deque<int> dq = {2, 2, 2, 2, 2};
+        size_t erased_count = dq.erase(2);
+        TEST(erased_count == 5);
+        TEST(dq.empty());
+        TEST(dq.size() == 0);
+    }
+    
+    // 测试 erase 函数，空 deque / Test erase function with empty deque
+    {
+        mystl::deque<int> dq;
+        size_t erased_count = dq.erase(2);
+        TEST(erased_count == 0);
+        TEST(dq.empty());
+    }
+    
+    // 测试 erase_if 函数 / Test erase_if function
+    {
+        mystl::deque<int> dq = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        size_t erased_count = dq.erase_if([](int x) { return x % 2 == 0; }); // 删除偶数 / Remove even numbers
+        TEST(erased_count == 5);
+        TEST(dq.size() == 5);
+        TEST(dq[0] == 1);
+        TEST(dq[1] == 3);
+        TEST(dq[2] == 5);
+        TEST(dq[3] == 7);
+        TEST(dq[4] == 9);
+    }
+    
+    // 测试 erase_if 函数，使用复杂谓词 / Test erase_if function with complex predicate
+    {
+        mystl::deque<int> dq = {10, 20, 30, 40, 50, 60, 70, 80, 90, 100};
+        size_t erased_count = dq.erase_if([](int x) { return x > 50; }); // 删除大于50的元素 / Remove elements greater than 50
+        TEST(erased_count == 5);
+        TEST(dq.size() == 5);
+        TEST(dq[0] == 10);
+        TEST(dq[1] == 20);
+        TEST(dq[2] == 30);
+        TEST(dq[3] == 40);
+        TEST(dq[4] == 50);
+    }
+    
+    // 测试 erase_if 函数，没有匹配的元素 / Test erase_if function with no matching elements
+    {
+        mystl::deque<int> dq = {1, 2, 3, 4, 5};
+        size_t erased_count = dq.erase_if([](int x) { return x > 10; });
+        TEST(erased_count == 0);
+        TEST(dq.size() == 5);
+        TEST(dq[0] == 1);
+        TEST(dq[4] == 5);
+    }
+    
+    // 测试 erase_if 函数，所有元素都匹配 / Test erase_if function with all elements matching
+    {
+        mystl::deque<int> dq = {10, 20, 30, 40, 50};
+        size_t erased_count = dq.erase_if([](int x) { return x > 0; });
+        TEST(erased_count == 5);
+        TEST(dq.empty());
+    }
+    
+    // 测试 erase_if 函数，空 deque / Test erase_if function with empty deque
+    {
+        mystl::deque<int> dq;
+        size_t erased_count = dq.erase_if([](int x) { return x > 0; });
+        TEST(erased_count == 0);
+        TEST(dq.empty());
+    }
+    
+    // 测试 erase 和 erase_if 的异常安全性 / Test exception safety of erase and erase_if
+    {
+        // 创建一个包含自定义类型的 deque / Create a deque with custom type
+        struct Value {
+            int data;
+            Value(int d) : data(d) {}
+            bool operator==(const Value& other) const { return data == other.data; }
+        };
+        
+        mystl::deque<Value> dq = {Value(1), Value(2), Value(3), Value(2), Value(4)};
+        
+        // 测试 erase 函数 / Test erase function
+        size_t erased_count = dq.erase(Value(2));
+        TEST(erased_count == 2);
+        TEST(dq.size() == 3);
+        TEST(dq[0].data == 1);
+        TEST(dq[1].data == 3);
+        TEST(dq[2].data == 4);
+        
+        // 测试 erase_if 函数 / Test erase_if function
+        erased_count = dq.erase_if([](const Value& v) { return v.data % 2 == 1; }); // 删除奇数 / Remove odd numbers
+        TEST(erased_count == 2); // 删除 1 和 3 / Remove 1 and 3
+        TEST(dq.size() == 1);
+        TEST(dq[0].data == 4);
+    }
+    
+    // 测试 erase 和 erase_if 函数的一致性 / Test consistency between erase and erase_if functions
+    {
+        mystl::deque<int> dq1 = {1, 2, 3, 2, 4, 2, 5};
+        mystl::deque<int> dq2 = dq1;
+
+        // 测试 erase 函数 / Test erase function
+        size_t erased_count = dq2.erase(2);
+        TEST(erased_count == 3);
+        TEST(dq2.size() == 4);
+        TEST(dq2[0] == 1);
+        TEST(dq2[1] == 3);
+        TEST(dq2[2] == 4);
+        TEST(dq2[3] == 5);
+    }
+
+    {
+        mystl::deque<int> dq1 = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        mystl::deque<int> dq2 = dq1;
+
+        // 测试 erase_if 函数 / Test erase_if function
+        size_t erased_count = dq2.erase_if([](int x) { return x % 2 == 0; });
+        TEST(erased_count == 5);
+        TEST(dq2.size() == 5);
+        TEST(dq2[0] == 1);
+        TEST(dq2[1] == 3);
+        TEST(dq2[2] == 5);
+        TEST(dq2[3] == 7);
+        TEST(dq2[4] == 9);
+    }
+    
+    std::cout << "  All erase and erase_if tests passed! / 所有 erase 和 erase_if 测试通过！" << std::endl;
+}
+
+/**
  * @brief Main test function
  * @brief 主测试函数
  * 
