@@ -899,25 +899,25 @@ private:
          * @brief Whether to propagate on copy assignment
          * @brief 是否在拷贝赋值时传播
          */
-        using propagate_on_container_copy_assignment = std::false_type;
+        using propagate_on_container_copy_assignment = mystl::false_type;
         
         /**
          * @brief Whether to propagate on move assignment
          * @brief 是否在移动赋值时传播
          */
-        using propagate_on_container_move_assignment = std::true_type;
+        using propagate_on_container_move_assignment = mystl::true_type;
         
         /**
          * @brief Whether to propagate on swap
          * @brief 是否在交换时传播
          */
-        using propagate_on_container_swap = std::false_type;
+        using propagate_on_container_swap = mystl::false_type;
         
         /**
          * @brief Whether allocators are always equal
          * @brief 分配器是否总是相等
          */
-        using is_always_equal = std::false_type;
+        using is_always_equal = mystl::false_type;
         
         // ==================== 构造函数 ====================
         // ==================== Constructors ====================

@@ -364,7 +364,7 @@ public:
      * @exception Any exception thrown by the copy constructor of T
      * @exception T的拷贝构造函数抛出的任何异常
      */
-    template<typename InputIt, typename = typename std::iterator_traits<InputIt>::iterator_category>
+    template<typename InputIt, typename = typename mystl::iterator_traits<InputIt>::iterator_category>
     vector(InputIt first, InputIt last, const Allocator& alloc = Allocator())
         : alloc_(alloc) {
         size_type count = static_cast<size_type>(mystl::distance(first, last));
@@ -1092,10 +1092,10 @@ public:
      * 
      * @details Returns a reference to the element at specified location `pos`,
      * with bounds checking. If `pos` is not within the range of the container,
-     * an exception of type `std::out_of_range` is thrown.
+     * an exception of type `mystl::out_of_range` is thrown.
      * 
      * @details 返回指定位置`pos`处元素的引用，带边界检查。
-     * 如果`pos`不在容器范围内，抛出`std::out_of_range`类型的异常。
+     * 如果`pos`不在容器范围内，抛出`mystl::out_of_range`类型的异常。
      * 
      * @note Time complexity: O(1)
      * @note 时间复杂度：O(1)
@@ -1107,8 +1107,8 @@ public:
      * @note 此函数提供安全、带边界检查的元素访问。
      * 当确定索引有效时，使用`operator[]`进行更快、无检查的访问。
      * 
-     * @exception std::out_of_range If pos is out of range (pos >= size())
-     * @exception std::out_of_range 如果pos超出范围（pos >= size()）
+     * @exception mystl::out_of_range If pos is out of range (pos >= size())
+     * @exception mystl::out_of_range 如果pos超出范围（pos >= size()）
      * 
      * @see operator[] for unchecked access
      * @see operator[] 用于无检查的访问
@@ -1131,10 +1131,10 @@ public:
      * 
      * @details Returns a const reference to the element at specified location `pos`,
      * with bounds checking. If `pos` is not within the range of the container,
-     * an exception of type `std::out_of_range` is thrown.
+     * an exception of type `mystl::out_of_range` is thrown.
      * 
      * @details 返回指定位置`pos`处元素的常量引用，带边界检查。
-     * 如果`pos`不在容器范围内，抛出`std::out_of_range`类型的异常。
+     * 如果`pos`不在容器范围内，抛出`mystl::out_of_range`类型的异常。
      * 
      * @note Time complexity: O(1)
      * @note 时间复杂度：O(1)
@@ -1146,8 +1146,8 @@ public:
      * @note 此函数提供安全、带边界检查的元素访问。
      * 当确定索引有效时，使用`operator[]`进行更快、无检查的访问。
      * 
-     * @exception std::out_of_range If pos is out of range (pos >= size())
-     * @exception std::out_of_range 如果pos超出范围（pos >= size()）
+     * @exception mystl::out_of_range If pos is out of range (pos >= size())
+     * @exception mystl::out_of_range 如果pos超出范围（pos >= size()）
      * 
      * @see operator[] for unchecked access
      * @see operator[] 用于无检查的访问
@@ -2590,7 +2590,7 @@ public:
      * @see assign(std::initializer_list<T>) for assigning from an initializer list
      * @see assign(std::initializer_list<T>) 用于从初始化列表分配
      */
-    template<typename InputIt, typename = typename std::iterator_traits<InputIt>::iterator_category>
+    template<typename InputIt, typename = typename mystl::iterator_traits<InputIt>::iterator_category>
     void assign(InputIt first, InputIt last) {
         size_type count = static_cast<size_type>(mystl::distance(first, last));
         

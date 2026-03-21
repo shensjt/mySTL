@@ -81,8 +81,24 @@ namespace mystl {
  * @note 此模板适用于自定义迭代器类型。
  * 对于指针和数组，提供了特化版本。
  */
-template<typename Iterator>
+template<typename Iterator, typename = void>
 struct iterator_traits {
+    // 空的主模板，用于非迭代器类型
+    // 这确保 SFINAE 可以工作
+};
+
+/**
+ * @brief Specialization for iterator types with required member types
+ * @brief 具有必需成员类型的迭代器类型的特化
+ */
+template<typename Iterator>
+struct iterator_traits<Iterator, void_t<
+    typename Iterator::iterator_category,
+    typename Iterator::value_type,
+    typename Iterator::difference_type,
+    typename Iterator::pointer,
+    typename Iterator::reference
+>> {
     using iterator_category = typename Iterator::iterator_category;  ///< Iterator category / 迭代器类别
     using value_type        = typename Iterator::value_type;         ///< Value type / 值类型
     using difference_type   = typename Iterator::difference_type;    ///< Difference type / 差值类型

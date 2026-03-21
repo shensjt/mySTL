@@ -176,7 +176,7 @@ public:
      */
     template<typename U>
     deque_iterator(const deque_iterator<U>& other,
-                  typename std::enable_if<std::is_same<T, const U>::value>::type* = nullptr) noexcept
+                  typename mystl::enable_if<mystl::is_same<T, const U>::value>::type* = nullptr) noexcept
         : cur_(other.current()), first_(other.first()), last_(other.last()), node_(const_cast<map_pointer>(other.node())) {}
     
     /**
@@ -202,7 +202,7 @@ public:
      */
     template<typename U>
     deque_iterator(U* cur, U* first, U* last, U** node,
-                  typename std::enable_if<std::is_same<T, const U>::value>::type* = nullptr) noexcept
+                  typename mystl::enable_if<mystl::is_same<T, const U>::value>::type* = nullptr) noexcept
         : cur_(cur), first_(first), last_(last), node_(const_cast<map_pointer>(node)) {}
     
     /**
@@ -1192,8 +1192,8 @@ public:
      * @note 异常安全性：强保证 - 如果抛出异常，
      * 不会发生内存泄漏，deque保持有效状态。
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     deque(InputIt first, InputIt last, const Allocator& alloc = Allocator())
         : alloc_(alloc) {
         // 计算距离（如果是随机访问迭代器）
@@ -2582,8 +2582,8 @@ public:
      * @note 时间复杂度：O(count + min(n, size-n))，其中n是pos到begin()的距离，
      *       count是范围中的元素数量
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     iterator insert(const_iterator pos, InputIt first, InputIt last) {
         difference_type index = pos - begin();
         if (first == last) return begin() + index;
@@ -2985,8 +2985,8 @@ public:
      * @note 异常安全性：强保证 - 如果抛出异常，
      * deque将处于有效状态（空）。
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     void assign(InputIt first, InputIt last) {
         clear();
         

@@ -36,6 +36,7 @@
 
 #include <cstring>      // for std::memcpy
 #include "../iterator/iterator_traits.hpp"
+#include "../iterator/iterator_functions.hpp"
 #include "../utility/type_traits.hpp"
 #include "../utility/move.hpp"
 
@@ -283,7 +284,7 @@ struct is_trivially_destructible : mystl::false_type {};
 
 // 平凡可复制类型的优化版本
 template <typename InputIt, typename ForwardIt,
-          typename = typename std::enable_if<
+          typename = typename mystl::enable_if<
               is_trivially_copyable<
                   typename iterator_traits<ForwardIt>::value_type
               >::value
@@ -291,10 +292,9 @@ template <typename InputIt, typename ForwardIt,
 ForwardIt uninitialized_copy_trivial(InputIt first, InputIt last, ForwardIt d_first) {
     if (first != last) {
         using value_type = typename iterator_traits<ForwardIt>::value_type;
-        std::size_t n = static_cast<std::size_t>(std::distance(first, last));
-        std::memcpy(std::addressof(*d_first), std::addressof(*first), 
-                   n * sizeof(value_type));
-        std::advance(d_first, n);
+        std::size_t n = static_cast<std::size_t>(mystl::distance(first, last));
+        std::memcpy(&*d_first, &*first, n * sizeof(value_type));
+        mystl::advance(d_first, n);
     }
     return d_first;
 }
@@ -306,13 +306,13 @@ ForwardIt uninitialized_copy_non_trivial(InputIt first, InputIt last, ForwardIt 
     try {
         for (; first != last; ++first, ++current) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            ::new (static_cast<void*>(std::addressof(*current))) value_type(*first);
+            ::new (static_cast<void*>(&*current)) value_type(*first);
         }
         return current;
     } catch (...) {
         for (; d_first != current; ++d_first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+            (&*d_first)->~value_type();
         }
         throw;
     }
@@ -356,14 +356,14 @@ ForwardIt uninitialized_copy_n(InputIt first, Size count, ForwardIt d_first) {
     auto current = d_first;
     try {
         for (Size i = 0; i < count; ++i, ++first, ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type(*first);
         }
         return current;
     } catch (...) {
         for (; d_first != current; ++d_first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+            (&*d_first)->~value_type();
         }
         throw;
     }
@@ -375,12 +375,12 @@ void uninitialized_fill(ForwardIt first, ForwardIt last, const T& value) {
     try {
         for (; current != last; ++current) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            ::new (static_cast<void*>(std::addressof(*current))) value_type(value);
+            ::new (static_cast<void*>(&*current)) value_type(value);
         }
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -391,14 +391,14 @@ ForwardIt uninitialized_fill_n(ForwardIt first, Size count, const T& value) {
     auto current = first;
     try {
         for (Size i = 0; i < count; ++i, ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type(value);
         }
         return current;
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -410,13 +410,13 @@ ForwardIt uninitialized_move(InputIt first, InputIt last, ForwardIt d_first) {
     try {
         for (; first != last; ++first, ++current) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            ::new (static_cast<void*>(std::addressof(*current))) value_type(mystl::move(*first));
+            ::new (static_cast<void*>(&*current)) value_type(mystl::move(*first));
         }
         return current;
     } catch (...) {
         for (; d_first != current; ++d_first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+            (&*d_first)->~value_type();
         }
         throw;
     }
@@ -427,14 +427,14 @@ ForwardIt uninitialized_move_n(InputIt first, Size count, ForwardIt d_first) {
     auto current = d_first;
     try {
         for (Size i = 0; i < count; ++i, ++first, ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type(mystl::move(*first));
         }
         return current;
     } catch (...) {
         for (; d_first != current; ++d_first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+            (&*d_first)->~value_type();
         }
         throw;
     }
@@ -445,13 +445,13 @@ void uninitialized_default_construct(ForwardIt first, ForwardIt last) {
     auto current = first;
     try {
         for (; current != last; ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type;
         }
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -462,14 +462,14 @@ ForwardIt uninitialized_default_construct_n(ForwardIt first, Size count) {
     auto current = first;
     try {
         for (Size i = 0; i < count; ++i, ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type;
         }
         return current;
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -480,13 +480,13 @@ void uninitialized_value_construct(ForwardIt first, ForwardIt last) {
     auto current = first;
     try {
         for (; current != last; ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type();
         }
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -497,14 +497,14 @@ ForwardIt uninitialized_value_construct_n(ForwardIt first, Size count) {
     auto current = first;
     try {
         for (Size i = 0; i < count; ++i, ++current) {
-            ::new (static_cast<void*>(std::addressof(*current))) 
+            ::new (static_cast<void*>(&*current)) 
                 typename iterator_traits<ForwardIt>::value_type();
         }
         return current;
     } catch (...) {
         for (; first != current; ++first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*first))->~value_type();
+            (&*first)->~value_type();
         }
         throw;
     }
@@ -516,7 +516,7 @@ void destroy(ForwardIt first, ForwardIt last) {
     // 在实际实现中，应该根据类型特征进行优化
     for (; first != last; ++first) {
         using value_type = typename iterator_traits<ForwardIt>::value_type;
-        static_cast<value_type*>(std::addressof(*first))->~value_type();
+        (&*first)->~value_type();
     }
 }
 
@@ -525,7 +525,7 @@ ForwardIt destroy_n(ForwardIt first, Size count) {
     auto current = first;
     for (Size i = 0; i < count; ++i, ++current) {
         using value_type = typename iterator_traits<ForwardIt>::value_type;
-        static_cast<value_type*>(std::addressof(*current))->~value_type();
+        (&*current)->~value_type();
     }
     return current;
 }
@@ -560,11 +560,11 @@ ForwardIt uninitialized_move_if_noexcept(InputIt first, InputIt last, ForwardIt 
             // 检查移动构造函数是否是noexcept的
             if constexpr (noexcept(value_type(mystl::move(*first)))) {
                 // 使用移动构造
-                ::new (static_cast<void*>(std::addressof(*current))) 
+                ::new (static_cast<void*>(&*current)) 
                     value_type(mystl::move(*first));
             } else {
                 // 使用复制构造
-                ::new (static_cast<void*>(std::addressof(*current))) 
+                ::new (static_cast<void*>(&*current)) 
                     value_type(*first);
             }
         }
@@ -572,7 +572,7 @@ ForwardIt uninitialized_move_if_noexcept(InputIt first, InputIt last, ForwardIt 
     } catch (...) {
         for (; d_first != current; ++d_first) {
             using value_type = typename iterator_traits<ForwardIt>::value_type;
-            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+            (&*d_first)->~value_type();
         }
         throw;
     }

@@ -52,6 +52,7 @@
 #include "../iterator/iterator_traits.hpp"
 #include "../utility/move.hpp"
 #include "../utility/swap.hpp"
+#include "../utility/type_traits.hpp"
 #include "../algorithm/algorithm.hpp"
 
 // ==================== Namespace mystl ====================
@@ -693,10 +694,10 @@ private:
         using const_void_pointer = const void*;                         ///< Const void pointer type / 常量void指针类型
         using size_type = std::size_t;                                  ///< Size type / 大小类型
         using difference_type = std::ptrdiff_t;                         ///< Difference type / 差值类型
-        using propagate_on_container_copy_assignment = std::false_type; ///< Whether to propagate on copy assignment / 是否在拷贝赋值时传播
-        using propagate_on_container_move_assignment = std::true_type;  ///< Whether to propagate on move assignment / 是否在移动赋值时传播
-        using propagate_on_container_swap = std::false_type;            ///< Whether to propagate on swap / 是否在交换时传播
-        using is_always_equal = std::false_type;                        ///< Whether allocators are always equal / 分配器是否总是相等
+        using propagate_on_container_copy_assignment = mystl::false_type; ///< Whether to propagate on copy assignment / 是否在拷贝赋值时传播
+        using propagate_on_container_move_assignment = mystl::true_type;  ///< Whether to propagate on move assignment / 是否在移动赋值时传播
+        using propagate_on_container_swap = mystl::false_type;            ///< Whether to propagate on swap / 是否在交换时传播
+        using is_always_equal = mystl::false_type;                        ///< Whether allocators are always equal / 分配器是否总是相等
         
         /**
          * @brief Default constructor
@@ -1037,8 +1038,8 @@ public:
      * @note Time complexity: O(n) where n is the number of elements in the range
      * @note 时间复杂度：O(n)，其中n是范围中的元素数量
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     forward_list(InputIt first, InputIt last, const Allocator& alloc = Allocator())
         : alloc_wrapper_(alloc) {
         head_.next = nullptr;
@@ -1715,8 +1716,8 @@ public:
      * @note Time complexity: O(n) where n is the number of elements in the range
      * @note 时间复杂度：O(n)，其中n是范围中的元素数量
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     iterator insert_after(const_iterator pos, InputIt first, InputIt last) {
         node_pointer pos_node = const_cast<node_pointer>(pos.node());
         iterator result = iterator(pos_node);
@@ -2500,8 +2501,8 @@ public:
      * @note Time complexity: O(n + m) where n is the current size and m is the number of elements in the range
      * @note 时间复杂度：O(n + m)，其中n是当前大小，m是范围中的元素数量
      */
-    template<typename InputIt, typename = typename std::enable_if<
-        !std::is_integral<InputIt>::value>::type>
+    template<typename InputIt, typename = typename mystl::enable_if<
+        !mystl::is_integral<InputIt>::value>::type>
     void assign(InputIt first, InputIt last) {
         clear();
         iterator it = before_begin();
