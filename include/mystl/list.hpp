@@ -1328,7 +1328,7 @@ public:
      * @see insert_range()
      * @see 参考 insert_range()
      */
-    template<typename InputIt>
+    template<typename InputIt, typename = typename mystl::enable_if<!mystl::is_integral<InputIt>::value>::type>
     list(InputIt first, InputIt last, const Allocator& alloc = Allocator())
         : size_(0), alloc_(alloc) {
         init_sentinel();
@@ -2841,7 +2841,7 @@ public:
      */
     template<typename... Args>
     void emplace_front(Args&&... args) {
-        insert(begin(), mystl::forward<Args>(args)...);
+        emplace(begin(), mystl::forward<Args>(args)...);
     }
     
     /**
@@ -2889,7 +2889,7 @@ public:
      */
     template<typename... Args>
     reference emplace_back(Args&&... args) {
-        return *insert(end(), mystl::forward<Args>(args)...);
+        return *emplace(end(), mystl::forward<Args>(args)...);
     }
     
     /**
@@ -3087,6 +3087,85 @@ public:
         --size_;
         
         return iterator(next);
+    }
+    
+    /**
+     * @brief Erases a range of elements from the list
+     * @brief 从list中删除一个范围的元素
+     * 
+     * @param first Iterator to the first element to remove
+     * @param first 指向要删除的第一个元素的迭代器
+     * @param last Iterator to one past the last element to remove
+     * @param last 指向要删除的最后一个元素之后位置的迭代器
+     * @return Iterator following the last removed element
+     * @return 指向最后一个被删除元素之后位置的迭代器
+     * 
+     * @details
+     * Removes the elements in the range [first, last) from the list.
+     * The elements are destroyed and their memory is deallocated.
+     * 
+     * @details
+     * 从list中删除范围[first, last)中的元素。
+     * 元素被销毁，其内存被释放。
+     * 
+     * @note Time complexity: O(n) where n is the number of elements to erase
+     * @note 时间复杂度：O(n)，其中n是要删除的元素数量
+     * 
+     * @note The range [first, last) must be a valid range in the list.
+     * 
+     * @note 范围[first, last)必须是list中的有效范围。
+     * 
+     * @note Iterators and references to the erased elements are invalidated.
+     * Other iterators and references remain valid.
+     * 
+     * @note 指向被删除元素的迭代器和引用失效。
+     * 其他迭代器和引用保持有效。
+     * 
+     * @note The function returns an iterator pointing to the element
+     * that followed the last erased element, or end() if the last element was erased.
+     * 
+     * @note 函数返回指向最后一个被删除元素之后元素的迭代器，
+     * 如果删除的是最后一个元素，则返回end()。
+     * 
+     * @note If the range is empty (first == last), the function returns an iterator
+     * equal to `last` without modifying the list.
+     * 
+     * @note 如果范围为空（first == last），函数返回等于`last`的迭代器，
+     * 而不修改list。
+     * 
+     * @warning Calling erase() with an invalid range results in undefined behavior.
+     * 
+     * @warning 使用无效范围调用erase()会导致未定义行为。
+     * 
+     * @see erase(const_iterator pos)
+     * @see clear()
+     * @see 参考 erase(const_iterator pos)
+     * @see 参考 clear()
+     */
+    iterator erase(const_iterator first, const_iterator last) {
+        if (first == last) {
+            return iterator(const_cast<node_type*>(last.node()));
+        }
+        
+        node_type* first_node = const_cast<node_type*>(first.node());
+        node_type* last_node = const_cast<node_type*>(last.node());
+        node_type* prev_node = first_node->prev;
+        node_type* next_node = last_node;
+        
+        // 从链表中移除节点范围
+        prev_node->next = next_node;
+        next_node->prev = prev_node;
+        
+        // 销毁范围内的所有节点并更新大小
+        node_type* current = first_node;
+        while (current != last_node) {
+            node_type* next = current->next;
+            destroy_node(current);
+            --size_;
+            current = next;
+        }
+        
+        return iterator(next_node);
     }
     
     /**
