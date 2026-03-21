@@ -537,4 +537,45 @@ void destroy_at(T* location) {
     }
 }
 
+// ============================================================================
+// uninitialized_move_if_noexcept - 安全移动函数
+// ============================================================================
+
+/**
+ * @brief 安全地将元素移动到未初始化内存
+ * @param first, last 要移动的输入范围
+ * @param d_first 目标范围的起始位置
+ * @return 指向最后移动的元素之后的位置的迭代器
+ * 
+ * 如果类型的移动构造函数是noexcept的，则使用移动，否则使用复制。
+ * 提供强异常安全保证。
+ */
+template <typename InputIt, typename ForwardIt>
+ForwardIt uninitialized_move_if_noexcept(InputIt first, InputIt last, ForwardIt d_first) {
+    auto current = d_first;
+    try {
+        for (; first != last; ++first, ++current) {
+            using value_type = typename iterator_traits<ForwardIt>::value_type;
+            
+            // 检查移动构造函数是否是noexcept的
+            if constexpr (noexcept(value_type(mystl::move(*first)))) {
+                // 使用移动构造
+                ::new (static_cast<void*>(std::addressof(*current))) 
+                    value_type(mystl::move(*first));
+            } else {
+                // 使用复制构造
+                ::new (static_cast<void*>(std::addressof(*current))) 
+                    value_type(*first);
+            }
+        }
+        return current;
+    } catch (...) {
+        for (; d_first != current; ++d_first) {
+            using value_type = typename iterator_traits<ForwardIt>::value_type;
+            static_cast<value_type*>(std::addressof(*d_first))->~value_type();
+        }
+        throw;
+    }
+}
+
 } // namespace mystl
