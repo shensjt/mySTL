@@ -500,11 +500,14 @@ public:
      * @param value 要插入的元素值
      * @return iterator Iterator to the inserted element or to the element that prevented insertion
      * @return iterator 指向插入元素的迭代器，或指向阻止插入的元素的迭代器
+     * 
+     * @note The hint is used as a starting point for the search, which can improve
+     *       performance if the hint is correct. If the hint is wrong, the performance
+     *       is the same as the regular insert.
+     * @note 提示用作搜索的起点，如果提示正确可以提高性能。如果提示错误，性能与常规插入相同。
      */
     iterator insert(const_iterator hint, const value_type& value) {
-        // 简化实现：忽略提示，直接插入
-        (void)hint;
-        return tree_.insert(value).first;
+        return tree_.insert(hint, value);
     }
     
     /**
@@ -519,9 +522,7 @@ public:
      * @return iterator 指向插入元素的迭代器，或指向阻止插入的元素的迭代器
      */
     iterator insert(const_iterator hint, value_type&& value) {
-        // 简化实现：忽略提示，直接插入
-        (void)hint;
-        return tree_.insert(mystl::move(value)).first;
+        return tree_.insert(hint, mystl::move(value));
     }
     
     /**

@@ -400,6 +400,85 @@ void test_map_emplace() {
 }
 
 /**
+ * @brief Test map insert with hint optimization
+ * @brief 测试map带提示插入优化
+ */
+void test_map_insert_hint() {
+    std::cout << "\n=== Testing map insert with hint optimization === / === 测试map带提示插入优化 ===" << std::endl;
+    
+    map<int, std::string> m;
+    
+    // 插入一些元素
+    m[1] = "one";
+    m[3] = "three";
+    m[5] = "five";
+    
+    // 测试正确的提示（插入在正确位置）
+    auto hint1 = m.find(3);  // 提示在3的位置
+    auto result1 = m.insert(hint1, {2, "two"});  // 2应该在3之前
+    assert(result1->first == 2);
+    assert(result1->second == "two");
+    
+    // 验证顺序
+    vector<int> keys;
+    for (const auto& p : m) {
+        keys.push_back(p.first);
+    }
+    assert(keys.size() == 4);
+    assert(keys[0] == 1);
+    assert(keys[1] == 2);
+    assert(keys[2] == 3);
+    assert(keys[3] == 5);
+    
+    // 测试错误的提示（应该仍然正确插入）
+    auto hint2 = m.find(1);  // 提示在1的位置，但插入4应该在5之前
+    auto result2 = m.insert(hint2, {4, "four"});
+    assert(result2->first == 4);
+    assert(result2->second == "four");
+    
+    // 验证顺序
+    keys.clear();
+    for (const auto& p : m) {
+        keys.push_back(p.first);
+    }
+    assert(keys.size() == 5);
+    assert(keys[0] == 1);
+    assert(keys[1] == 2);
+    assert(keys[2] == 3);
+    assert(keys[3] == 4);
+    assert(keys[4] == 5);
+    
+    // 测试插入重复键（应该返回现有元素）
+    auto hint3 = m.find(3);
+    auto result3 = m.insert(hint3, {3, "THREE"});  // 重复键
+    assert(result3->first == 3);
+    assert(result3->second == "three");  // 应该是原来的值，不是新值
+    
+    // 测试移动语义的插入提示
+    auto hint4 = m.find(5);
+    auto result4 = m.insert(hint4, mystl::make_pair(6, std::string("six")));
+    assert(result4->first == 6);
+    assert(result4->second == "six");
+    
+    // 测试end()作为提示
+    auto result5 = m.insert(m.end(), {0, "zero"});
+    assert(result5->first == 0);
+    assert(result5->second == "zero");
+    
+    // 验证最终顺序
+    keys.clear();
+    for (const auto& p : m) {
+        keys.push_back(p.first);
+    }
+    assert(keys.size() == 7);
+    for (size_t i = 0; i < keys.size(); ++i) {
+        assert(keys[i] == static_cast<int>(i));
+    }
+    
+    std::cout << "Insert with hint optimization test passed! / 带提示插入优化测试通过！" << std::endl;
+}
+
+/**
  * @brief Test map swap operation
  * @brief 测试map交换操作
  */
@@ -507,6 +586,7 @@ int main() {
         test_map_comparison();
         test_map_custom_comparator();
         test_map_emplace();
+        test_map_insert_hint(); 
         test_map_swap();
         test_map_initializer_list();
         test_map_comparators();

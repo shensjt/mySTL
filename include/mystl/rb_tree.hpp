@@ -826,6 +826,228 @@ public:
         return {iterator(z), true};
     }
     
+    /**
+     * @brief Insert element with hint
+     * @brief 带提示插入元素
+     * 
+     * @param hint Hint for the position where the element can be inserted
+     * @param hint 元素可以插入位置的提示
+     * @param value Element value to insert
+     * @param value 要插入的元素值
+     * @return iterator Iterator to the inserted element or to the element that prevented insertion
+     * @return iterator 指向插入元素的迭代器，或指向阻止插入的元素的迭代器
+     * 
+     * @note The hint is used as a starting point for the search, which can improve
+     *       performance if the hint is correct. If the hint is wrong, the performance
+     *       is the same as the regular insert.
+     * @note 提示用作搜索的起点，如果提示正确可以提高性能。如果提示错误，性能与常规插入相同。
+     */
+    iterator insert(const_iterator hint, const value_type& value) {
+        // 如果提示是end()，从根开始搜索
+        if (hint.node_ == nullptr) {
+            return insert(value).first;
+        }
+        
+        // 获取提示节点的键
+        const key_type& hint_key = key_of_(*hint);
+        const key_type& new_key = key_of_(value);
+        
+        // 检查提示是否有效
+        // 情况1：新键小于提示键，检查提示是否是第一个不小于新键的元素
+        if (comp_(new_key, hint_key)) {
+            // 获取提示的前驱
+            auto prev = const_iterator(static_cast<node_ptr>(hint.node_->predecessor()));
+            if (prev.node_ == nullptr || comp_(key_of_(*prev), new_key)) {
+                // 提示是第一个不小于新键的元素，从提示开始搜索
+                return insert_impl(hint.node_, value).first;
+            }
+        }
+        // 情况2：新键大于提示键，检查提示是否是最后一个不大于新键的元素
+        else if (comp_(hint_key, new_key)) {
+            // 获取提示的后继
+            auto next = const_iterator(static_cast<node_ptr>(hint.node_->successor()));
+            if (next.node_ == nullptr || comp_(new_key, key_of_(*next))) {
+                // 提示是最后一个不大于新键的元素，从提示开始搜索
+                return insert_impl(hint.node_, value).first;
+            }
+        }
+        // 情况3：键相等
+        else {
+            // 如果允许重复，从提示开始搜索
+            if (AllowDuplicates) {
+                return insert_impl(hint.node_, value).first;
+            } else {
+                // 不允许重复，返回现有元素
+                return iterator(const_cast<node_ptr>(hint.node_));
+            }
+        }
+        
+        // 提示无效，使用常规插入
+        return insert(value).first;
+    }
+    
+    /**
+     * @brief Insert element with hint (move version)
+     * @brief 带提示插入元素（移动版本）
+     * 
+     * @param hint Hint for the position where the element can be inserted
+     * @param hint 元素可以插入位置的提示
+     * @param value Element value to insert
+     * @param value 要插入的元素值
+     * @return iterator Iterator to the inserted element or to the element that prevented insertion
+     * @return iterator 指向插入元素的迭代器，或指向阻止插入的元素的迭代器
+     */
+    iterator insert(const_iterator hint, value_type&& value) {
+        // 如果提示是end()，从根开始搜索
+        if (hint.node_ == nullptr) {
+            return insert(mystl::move(value)).first;
+        }
+        
+        // 获取提示节点的键
+        const key_type& hint_key = key_of_(*hint);
+        const key_type& new_key = key_of_(value);
+        
+        // 检查提示是否有效
+        // 情况1：新键小于提示键，检查提示是否是第一个不小于新键的元素
+        if (comp_(new_key, hint_key)) {
+            // 获取提示的前驱
+            auto prev = const_iterator(static_cast<node_ptr>(hint.node_->predecessor()));
+            if (prev.node_ == nullptr || comp_(key_of_(*prev), new_key)) {
+                // 提示是第一个不小于新键的元素，从提示开始搜索
+                return insert_impl(hint.node_, mystl::move(value)).first;
+            }
+        }
+        // 情况2：新键大于提示键，检查提示是否是最后一个不大于新键的元素
+        else if (comp_(hint_key, new_key)) {
+            // 获取提示的后继
+            auto next = const_iterator(static_cast<node_ptr>(hint.node_->successor()));
+            if (next.node_ == nullptr || comp_(new_key, key_of_(*next))) {
+                // 提示是最后一个不大于新键的元素，从提示开始搜索
+                return insert_impl(hint.node_, mystl::move(value)).first;
+            }
+        }
+        // 情况3：键相等
+        else {
+            // 如果允许重复，从提示开始搜索
+            if (AllowDuplicates) {
+                return insert_impl(hint.node_, mystl::move(value)).first;
+            } else {
+                // 不允许重复，返回现有元素
+                return iterator(const_cast<node_ptr>(hint.node_));
+            }
+        }
+        
+        // 提示无效，使用常规插入
+        return insert(mystl::move(value)).first;
+    }
+    
+private:
+    /**
+     * @brief Internal implementation of insert starting from a specific node
+     * @brief 从特定节点开始插入的内部实现
+     * 
+     * @param start Starting node for the search
+     * @param start 搜索的起始节点
+     * @param value Element value to insert
+     * @param value 要插入的元素值
+     * @return pair<iterator, bool> Iterator to the inserted element and bool indicating success
+     * @return pair<iterator, bool> 指向插入元素的迭代器和表示成功的布尔值
+     */
+    pair<iterator, bool> insert_impl(base_ptr start, const value_type& value) {
+        base_ptr y = nil_;
+        base_ptr x = start;
+        
+        // 从起始节点开始搜索
+        while (x != nil_) {
+            y = x;
+            if (comp_(key_of_(value), key_of_(static_cast<node_ptr>(x)->value))) {
+                x = x->left;
+            } else if (comp_(key_of_(static_cast<node_ptr>(x)->value), key_of_(value))) {
+                x = x->right;
+            } else {
+                // 如果允许重复，继续向右子树查找
+                if (AllowDuplicates) {
+                    x = x->right;
+                } else {
+                    return {iterator(static_cast<node_ptr>(x)), false};
+                }
+            }
+        }
+        
+        node_ptr z = create_node(value);
+        z->parent = y;
+        
+        if (y == nil_) {
+            root_ = z;
+        } else if (comp_(key_of_(value), key_of_(static_cast<node_ptr>(y)->value))) {
+            y->left = z;
+        } else {
+            y->right = z;
+        }
+        
+        z->left = nil_;
+        z->right = nil_;
+        z->color = detail::RED;
+        
+        insert_fixup(z);
+        ++size_;
+        return {iterator(z), true};
+    }
+    
+    /**
+     * @brief Internal implementation of insert starting from a specific node (move version)
+     * @brief 从特定节点开始插入的内部实现（移动版本）
+     * 
+     * @param start Starting node for the search
+     * @param start 搜索的起始节点
+     * @param value Element value to insert
+     * @param value 要插入的元素值
+     * @return pair<iterator, bool> Iterator to the inserted element and bool indicating success
+     * @return pair<iterator, bool> 指向插入元素的迭代器和表示成功的布尔值
+     */
+    pair<iterator, bool> insert_impl(base_ptr start, value_type&& value) {
+        base_ptr y = nil_;
+        base_ptr x = start;
+        
+        // 从起始节点开始搜索
+        while (x != nil_) {
+            y = x;
+            if (comp_(key_of_(value), key_of_(static_cast<node_ptr>(x)->value))) {
+                x = x->left;
+            } else if (comp_(key_of_(static_cast<node_ptr>(x)->value), key_of_(value))) {
+                x = x->right;
+            } else {
+                // 如果允许重复，继续向右子树查找
+                if (AllowDuplicates) {
+                    x = x->right;
+                } else {
+                    return {iterator(static_cast<node_ptr>(x)), false};
+                }
+            }
+        }
+        
+        node_ptr z = create_node(mystl::move(value));
+        z->parent = y;
+        
+        if (y == nil_) {
+            root_ = z;
+        } else if (comp_(key_of_(z->value), key_of_(static_cast<node_ptr>(y)->value))) {
+            y->left = z;
+        } else {
+            y->right = z;
+        }
+        
+        z->left = nil_;
+        z->right = nil_;
+        z->color = detail::RED;
+        
+        insert_fixup(z);
+        ++size_;
+        return {iterator(z), true};
+    }
+    
+public:
+    
     iterator find(const key_type& key) {
         base_ptr x = root_;
         while (x != nil_) {

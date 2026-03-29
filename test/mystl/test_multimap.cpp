@@ -404,6 +404,99 @@ void test_multimap_emplace() {
 }
 
 /**
+ * @brief Test multimap insert with hint optimization
+ * @brief 测试multimap带提示插入优化
+ */
+void test_multimap_insert_hint() {
+    std::cout << "\n=== Testing multimap insert with hint optimization === / === 测试multimap带提示插入优化 ===" << std::endl;
+    
+    multimap<int, std::string> mm;
+    
+    // 插入一些元素
+    mm.insert({1, "one-a"});
+    mm.insert({3, "three-a"});
+    mm.insert({3, "three-b"});  // 重复键
+    mm.insert({5, "five"});
+    
+    // 测试正确的提示（插入在正确位置）
+    auto hint1 = mm.find(3);  // 提示在3的位置
+    auto result1 = mm.insert(hint1, {2, "two"});  // 2应该在3之前
+    assert(result1->first == 2);
+    assert(result1->second == "two");
+    
+    // 验证顺序
+    vector<pair<int, std::string>> pairs;
+    for (const auto& p : mm) {
+        pairs.push_back({p.first, p.second});
+    }
+    assert(pairs.size() == 5);  // 应该是5个元素：1, 3, 3, 5, 2
+    
+    // 验证键的顺序
+    // 注意：插入2后，顺序应该是1, 2, 3, 3, 5
+    assert(pairs[0].first == 1);
+    assert(pairs[1].first == 2);
+    assert(pairs[2].first == 3);
+    assert(pairs[3].first == 3);  // 重复键
+    assert(pairs[4].first == 5);
+    
+    // 测试错误的提示（应该仍然正确插入）
+    auto hint2 = mm.find(1);  // 提示在1的位置，但插入4应该在5之前
+    auto result2 = mm.insert(hint2, {4, "four"});
+    assert(result2->first == 4);
+    assert(result2->second == "four");
+    
+    // 验证顺序
+    pairs.clear();
+    for (const auto& p : mm) {
+        pairs.push_back({p.first, p.second});
+    }
+    assert(pairs.size() == 6);  // 应该是6个元素：1, 2, 3, 3, 4, 5
+    
+    // 验证键的顺序
+    assert(pairs[0].first == 1);
+    assert(pairs[1].first == 2);
+    assert(pairs[2].first == 3);
+    assert(pairs[3].first == 3);  // 重复键
+    assert(pairs[4].first == 4);
+    assert(pairs[5].first == 5);
+    
+    // 测试插入重复键（multimap允许，应该插入新元素）
+    auto hint3 = mm.find(3);
+    auto result3 = mm.insert(hint3, {3, "three-c"});  // 重复键
+    assert(result3->first == 3);
+    assert(result3->second == "three-c");
+    
+    // 验证现在有3个键为3的元素
+    assert(mm.count(3) == 3);
+    
+    // 测试移动语义的插入提示
+    auto hint4 = mm.find(5);
+    auto result4 = mm.insert(hint4, mystl::make_pair(6, std::string("six")));
+    assert(result4->first == 6);
+    assert(result4->second == "six");
+    
+    // 测试end()作为提示
+    auto result5 = mm.insert(mm.end(), {0, "zero"});
+    assert(result5->first == 0);
+    assert(result5->second == "zero");
+    
+    // 验证最终顺序
+    pairs.clear();
+    for (const auto& p : mm) {
+        pairs.push_back({p.first, p.second});
+    }
+    assert(pairs.size() == 9);  // 应该是9个元素：0, 1, 2, 3, 3, 3, 4, 5, 6
+    
+    // 验证键的顺序
+    int expected_keys[] = {0, 1, 2, 3, 3, 3, 4, 5, 6};
+    for (size_t i = 0; i < 9; ++i) {
+        assert(pairs[i].first == expected_keys[i]);
+    }
+    
+    std::cout << "Insert with hint optimization test passed! / 带提示插入优化测试通过！" << std::endl;
+}
+
+/**
  * @brief Test multimap swap operation
  * @brief 测试multimap交换操作
  */
@@ -516,6 +609,7 @@ int main() {
         test_multimap_comparison();
         test_multimap_custom_comparator();
         test_multimap_emplace();
+        test_multimap_insert_hint();  // 新增的插入提示测试
         test_multimap_swap();
         test_multimap_initializer_list();
         test_multimap_comparators();
