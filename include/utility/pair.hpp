@@ -284,6 +284,67 @@ inline void swap(pair<T1, T2>& lhs, pair<T1, T2>& rhs) noexcept {
     lhs.swap(rhs);
 }
 
+// ==================== 结构化绑定支持 ====================
+
+/**
+ * @brief Get the first element of a pair (for structured binding support)
+ * @brief 获取pair的第一个元素（用于结构化绑定支持）
+ * 
+ * @tparam I Index (0 for first, 1 for second)
+ * @tparam I 索引（0表示第一个，1表示第二个）
+ * @tparam T1 Type of the first element
+ * @tparam T1 第一个元素的类型
+ * @tparam T2 Type of the second element
+ * @tparam T2 第二个元素的类型
+ * @param p The pair
+ * @param p pair对象
+ * @return Reference to the I-th element
+ * @return 第I个元素的引用
+ */
+template <size_t I, typename T1, typename T2>
+constexpr typename conditional<I == 0, T1&, T2&>::type
+get(mystl::pair<T1, T2>& p) noexcept {
+    static_assert(I < 2, "pair index out of bounds");
+    if constexpr (I == 0) {
+        return p.first;
+    } else {
+        return p.second;
+    }
+}
+
+template <size_t I, typename T1, typename T2>
+constexpr typename conditional<I == 0, const T1&, const T2&>::type
+get(const mystl::pair<T1, T2>& p) noexcept {
+    static_assert(I < 2, "pair index out of bounds");
+    if constexpr (I == 0) {
+        return p.first;
+    } else {
+        return p.second;
+    }
+}
+
+template <size_t I, typename T1, typename T2>
+constexpr typename conditional<I == 0, T1&&, T2&&>::type
+get(mystl::pair<T1, T2>&& p) noexcept {
+    static_assert(I < 2, "pair index out of bounds");
+    if constexpr (I == 0) {
+        return mystl::move(p.first);
+    } else {
+        return mystl::move(p.second);
+    }
+}
+
+template <size_t I, typename T1, typename T2>
+constexpr typename conditional<I == 0, const T1&&, const T2&&>::type
+get(const mystl::pair<T1, T2>&& p) noexcept {
+    static_assert(I < 2, "pair index out of bounds");
+    if constexpr (I == 0) {
+        return mystl::move(p.first);
+    } else {
+        return mystl::move(p.second);
+    }
+}
+
 // ==================== 特化 ====================
 
 // 为pair特化is_trivially_copyable等类型特性
