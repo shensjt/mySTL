@@ -580,13 +580,8 @@ public:
      * @return size_type 具有该键的元素数量（对于multiset可以大于1）
      */
     size_type count(const key_type& key) const {
-        // 对于multiset，需要计算所有等于key的元素
-        auto range = tree_.equal_range(key);
-        size_type cnt = 0;
-        for (auto it = range.first; it != range.second; ++it) {
-            ++cnt;
-        }
-        return cnt;
+        // 使用rb_tree的count方法，它已经为AllowDuplicates=true进行了优化
+        return tree_.count(key);
     }
     
     /**

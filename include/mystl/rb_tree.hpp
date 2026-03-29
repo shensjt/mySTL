@@ -855,7 +855,18 @@ public:
     }
     
     size_type count(const key_type& key) const {
-        return find(key) != end() ? 1 : 0;
+        if (!AllowDuplicates) {
+            // 对于set，最多有一个元素
+            return find(key) != end() ? 1 : 0;
+        } else {
+            // 对于multiset，需要计算所有等于key的元素
+            auto range = equal_range(key);
+            size_type cnt = 0;
+            for (auto it = range.first; it != range.second; ++it) {
+                ++cnt;
+            }
+            return cnt;
+        }
     }
     
     size_type erase(const key_type& key) {
