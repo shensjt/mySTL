@@ -8,8 +8,6 @@
  * This file implements a complete red-black tree based on the working simple version.
  * It provides full functionality for associative containers (set, map, etc.).
  * 
- * 本文件基于工作正常的简化版本实现完整的红黑树。
- * 为关联容器（set、map等）提供完整功能。
  * 
  * @author shensjt
  * @date 2026-03-29
