@@ -69,6 +69,18 @@ struct pair {
     constexpr pair(const T1& a, const T2& b) : first(a), second(b) {}
     
     /**
+     * @brief Copy constructor
+     * @brief 拷贝构造函数
+     * 
+     * @param other Another pair to copy from
+     * @param other 要拷贝的另一个pair
+     * 
+     * 效果：first用other.first初始化，second用other.second初始化。
+     * 注意：当T1或T2是const类型时，需要显式定义拷贝构造函数。
+     */
+    constexpr pair(const pair& other) : first(other.first), second(other.second) {}
+    
+    /**
      * @brief Converting constructor
      * @brief 转换构造函数
      * 
